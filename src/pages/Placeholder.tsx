@@ -7,7 +7,7 @@ export function Placeholder() {
   const [count, setCount] = useState(0);
 
   return (
-    <>
+    <div className="mx-auto my-0 max-w-320 w-fit p-8 text-center">
       <div className="flex flex-row flex-nowrap justify-evenly">
         <span className="transition-[filter] duration-300 hover:drop-shadow-[0_0_2rem_#646cffaa]">
           <Logo href="https://vite.dev" src={viteLogo} alt="Vite logo" />
@@ -31,6 +31,6 @@ export function Placeholder() {
       <p className="text-neutral-300">
         Click on the Vite and React logos to learn more
       </p>
-    </>
+    </div>
   );
 }

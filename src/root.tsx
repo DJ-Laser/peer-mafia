@@ -10,10 +10,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="m-0 flex min-h-screen min-w-80 place-items-center bg-neutral-800 text-white">
-        <div id="root" className="mx-auto my-0 max-w-320 p-8 text-center">
-          {children}
-        </div>
+      <body>
+        {children}
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -22,5 +20,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function Root() {
-  return <Outlet />;
+  return (
+    <div className="min-h-screen bg-neutral-800 text-white">
+      <Outlet />
+    </div>
+  );
 }
