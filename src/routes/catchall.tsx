@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { Placeholder } from "../pages/Placeholder";
+import { Home } from "../pages/Home";
 
 export default function Component() {
   const location = useLocation();
@@ -14,5 +14,5 @@ export default function Component() {
     }
   }, [location.pathname, navigate]);
 
-  return <Placeholder />;
+  return <Home />;
 }
