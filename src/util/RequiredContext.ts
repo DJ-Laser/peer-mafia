@@ -1,4 +1,4 @@
-import { Context, createContext, use } from "react";
+import { Context, createContext, useContext } from "react";
 
 export type RequiredContext<T> = Context<T | undefined>;
 
@@ -7,7 +7,7 @@ export function createRequiredContext<T>(): RequiredContext<T> {
 }
 
 export function useRequiredContext<T>(context: RequiredContext<T>): T {
-  const value = use(context);
+  const value = useContext(context);
 
   if (value === undefined) {
     throw `${context.displayName} used without a provider!`;

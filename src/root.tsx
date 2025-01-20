@@ -1,4 +1,9 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import { Route } from "./+types/root";
+import { Connection } from "./components/connection/connection";
+import { ConnectionContext } from "./components/connection/ConnectionContext";
+import { NotificationContainer } from "./components/notifications/NotificationContainer";
+import { Notifier } from "./components/notifications/notifier";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,10 +24,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function Root() {
+// eslint-disable-next-line react-refresh/only-export-components
+export function clientLoader() {
+  const notifier = new Notifier();
+  const connection = new Connection(notifier);
+  return { notifier, connection };
+}
+
+export default function Root({ loaderData }: Route.ComponentProps) {
   return (
-    <div className="min-h-screen bg-neutral-800 text-white">
-      <Outlet />
-    </div>
+    <ConnectionContext value={loaderData.connection}>
+      <div className="min-h-screen bg-neutral-800 text-white">
+        <NotificationContainer notifier={loaderData.notifier} />
+        <Outlet />
+      </div>
+    </ConnectionContext>
   );
 }

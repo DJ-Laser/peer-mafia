@@ -1,20 +1,44 @@
-import { DataConnection, Peer, PeerError, PeerErrorType } from "peerjs";
+import Peer, { DataConnection, PeerError, PeerErrorType } from "peerjs";
+import { Notifier } from "../notifications/notifier";
 
 const ID_ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const UUID_STORAGE_KEY = "PEER-UNIQUEIDENTIFIER";
 const ID_NUM_CHARS = 5;
 
-export type Status = "idle" | "connecting" | "host" | "player";
+interface ConnectingStatus {
+  type: "connecting";
+  roomId: string;
+}
+
+interface PlayerStatus {
+  type: "player";
+  roomId: string;
+}
+
+interface HostStatus {
+  type: "host";
+}
+
+export type ConnectionStatus =
+  | { type: "idle" }
+  | ConnectingStatus
+  | PlayerStatus
+  | HostStatus;
 
 export class Connection {
+  notifier: Notifier;
   peer: Peer;
   id: string;
   uuid: string;
 
-  _status: Status;
+  _status: ConnectionStatus;
 
-  public get status(): Status {
+  public get status(): ConnectionStatus {
     return this._status;
+  }
+
+  private set status(status: ConnectionStatus) {
+    this._status = status;
   }
 
   static generateId(): string {
@@ -32,8 +56,9 @@ export class Connection {
     return `DJLASER-mafia-${id}`;
   }
 
-  constructor() {
-    this._status = "idle";
+  constructor(notifier: Notifier) {
+    this.notifier = notifier;
+    this._status = { type: "idle" };
     this.id = Connection.generateId();
     this.peer = new Peer(Connection.prefixPeerId(this.id));
 
@@ -56,15 +81,17 @@ export class Connection {
       this.attemptReconnect();
     });
 
-    this.peer.on("error", this.handleError);
+    this.peer.on("error", (error) => this.handleError(error));
 
-    this.peer.on("connection", this.handleConnection);
+    this.peer.on("connection", (connection) =>
+      this.handleConnection(connection),
+    );
   }
 
   private handleError(error: PeerError<`${PeerErrorType}`>) {
     switch (error.type) {
       case "unavailable-id":
-        if (this.status === "idle" || this.status == "connecting") {
+        if (this.status.type === "idle" || this.status.type == "connecting") {
           this.destroyConnection();
         }
 
@@ -72,6 +99,13 @@ export class Connection {
         break;
 
       case "peer-unavailable":
+        if (this.status.type === "connecting") {
+          this.notifier.setNotification({
+            color: "error",
+            text: `Failed to connect: Room ${this.status.roomId} does not exist`,
+          });
+        }
+
         this.destroyConnection();
 
         break;
@@ -82,7 +116,10 @@ export class Connection {
   }
 
   private handleConnection(connection: DataConnection) {
-    console.log("Attampted connection from:" + connection.metadata);
+    this.notifier.setNotification({
+      color: "info",
+      text: "Attempted connection from:" + connection.label,
+    });
   }
 
   private attemptReconnect() {
@@ -96,27 +133,29 @@ export class Connection {
 
     this.id = Connection.generateId();
     this.peer = new Peer(Connection.prefixPeerId(this.id));
-    this._status = "idle";
+    this.status = { type: "idle" };
   }
 
   /** Returns true if connection successful */
-  public joinRoom(id: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      this._status = "connecting";
+  public joinRoom(roomId: string) {
+    this.status = { type: "connecting", roomId };
 
-      const dataConnection = this.peer.connect(Connection.prefixPeerId(id), {
-        label: `player-${this.uuid}`,
-        metadata: {
-          playerUuid: this.uuid,
-        },
-      });
+    this.notifier.setNotification({
+      color: "error",
+      text: `Failed to connect: Room ${this.status.roomId} does not exist`,
+    });
 
-      dataConnection.on("open", () => {
-        resolve(true);
-      });
+    const dataConnection = this.peer.connect(Connection.prefixPeerId(roomId), {
+      label: `player-${this.uuid}`,
+      metadata: {
+        playerUuid: this.uuid,
+      },
+    });
 
-      dataConnection.on("close", () => {
-        resolve(false);
+    dataConnection.on("open", () => {
+      this.notifier.setNotification({
+        color: "success",
+        text: "Succesfully connected to: " + roomId,
       });
     });
   }
