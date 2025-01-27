@@ -25,6 +25,10 @@ export type ConnectionStatus =
   | PlayerStatus
   | HostStatus;
 
+type Message =
+  | { type: "ConnectionAccepted" }
+  | { type: "ConnectionDeniedNonHost" };
+
 export class Connection {
   notifier: Notifier;
   peer: Peer;
@@ -106,20 +110,11 @@ export class Connection {
           });
         }
 
-        this.destroyConnection();
-
         break;
 
       default:
         console.log("Unexpected error: " + error);
     }
-  }
-
-  private handleConnection(connection: DataConnection) {
-    this.notifier.setNotification({
-      color: "info",
-      text: "Attempted connection from:" + connection.label,
-    });
   }
 
   private attemptReconnect() {
@@ -136,14 +131,16 @@ export class Connection {
     this.status = { type: "idle" };
   }
 
+  private sendMessage(
+    connection: DataConnection,
+    message: Message,
+  ): void | Promise<void> {
+    return connection.send(message);
+  }
+
   /** Returns true if connection successful */
   public joinRoom(roomId: string) {
     this.status = { type: "connecting", roomId };
-
-    this.notifier.setNotification({
-      color: "error",
-      text: `Failed to connect: Room ${this.status.roomId} does not exist`,
-    });
 
     const dataConnection = this.peer.connect(Connection.prefixPeerId(roomId), {
       label: `player-${this.uuid}`,
@@ -152,11 +149,40 @@ export class Connection {
       },
     });
 
-    dataConnection.on("open", () => {
-      this.notifier.setNotification({
-        color: "success",
-        text: "Succesfully connected to: " + roomId,
-      });
+    dataConnection.on("data", (data: unknown) => {
+      const message = data as Message;
+      console.log(data);
+
+      switch (message.type) {
+        case "ConnectionAccepted":
+          this.notifier.setNotification({
+            color: "success",
+            text: "Succesfully connected to: " + roomId,
+          });
+
+          break;
+
+        case "ConnectionDeniedNonHost":
+          this.notifier.setNotification({
+            color: "error",
+            text: `Failed to connect: Room ${roomId} does not exist`,
+          });
+
+          break;
+      }
+    });
+  }
+
+  private handleConnection(connection: DataConnection) {
+    if (this.status.type !== "host") {
+      this.sendMessage(connection, { type: "ConnectionDeniedNonHost" });
+    }
+
+    this.sendMessage(connection, { type: "ConnectionAccepted" });
+
+    this.notifier.setNotification({
+      color: "info",
+      text: "Attempted connection from:" + connection.label,
     });
   }
 }
