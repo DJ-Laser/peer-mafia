@@ -2,7 +2,7 @@ import {
   createRequiredContext,
   RequiredContext,
 } from "../../util/RequiredContext";
-import { Connection } from "./connection";
+import { Notifier } from "./notifier";
 
-export const ConnectionContext: RequiredContext<Connection> =
+export const NotifierContext: RequiredContext<Notifier> =
   createRequiredContext();
