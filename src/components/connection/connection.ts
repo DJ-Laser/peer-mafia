@@ -1,7 +1,7 @@
 import Peer, { DataConnection, PeerError, PeerErrorType } from "peerjs";
 import { Notifier } from "../notifications/notifier";
 
-const ID_ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const ID_ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const UUID_STORAGE_KEY = "PEER-UNIQUEIDENTIFIER";
 const ID_NUM_CHARS = 5;
 
@@ -144,9 +144,7 @@ export class Connection {
 
     const dataConnection = this.peer.connect(Connection.prefixPeerId(roomId), {
       label: `player-${this.uuid}`,
-      metadata: {
-        playerUuid: this.uuid,
-      },
+      metadata: { playerUuid: this.uuid },
     });
 
     dataConnection.on("data", (data: unknown) => {
