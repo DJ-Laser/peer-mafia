@@ -1,4 +1,5 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import { Navbar } from "./components/Navbar";
 import { NotificationContainer } from "./components/notifications/NotificationContainer";
 import { Notifier } from "./components/notifications/notifier";
 import { NotifierContext } from "./hooks/useNotifier";
@@ -26,9 +27,10 @@ const pageNotifier = new Notifier();
 
 export default function Root() {
   return (
-    <div className="min-h-screen bg-neutral-800 text-white">
+    <div className="min-h-screen bg-slate-900 text-white">
       <NotifierContext value={pageNotifier}>
         <NotificationContainer notifier={pageNotifier} />
+        <Navbar />
         <Outlet />
       </NotifierContext>
     </div>
