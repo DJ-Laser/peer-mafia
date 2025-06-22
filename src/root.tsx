@@ -1,6 +1,7 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { NotificationContainer } from "./components/notifications/NotificationContainer";
-import { getNotifier } from "./components/notifications/notifier";
+import { Notifier } from "./components/notifications/notifier";
+import { NotifierContext } from "./hooks/useNotifier";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -21,11 +22,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+const pageNotifier = new Notifier();
+
 export default function Root() {
   return (
     <div className="min-h-screen bg-neutral-800 text-white">
-      <NotificationContainer notifier={getNotifier()} />
-      <Outlet />
+      <NotifierContext value={pageNotifier}>
+        <NotificationContainer notifier={pageNotifier} />
+        <Outlet />
+      </NotifierContext>
     </div>
   );
 }

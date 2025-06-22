@@ -1,11 +1,18 @@
 import { useCallback } from "react";
 import { HostConnection } from "../components/connection/host";
-import { getNotifier } from "../components/notifications/notifier";
 import { useConnection } from "../hooks/useConnection";
+import { useNotifier } from "../hooks/useNotifier";
 
 export default function Component() {
+  const notifier = useNotifier();
+
   const hostConnection = useConnection(
-    useCallback(() => new HostConnection(getNotifier()), []),
+    notifier,
+    useCallback(() => {
+      const connection = new HostConnection();
+
+      return connection;
+    }, []),
   );
 
   return (

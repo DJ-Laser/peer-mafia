@@ -1,17 +1,21 @@
 import { DataConnection } from "peerjs";
-import { Notifier } from "../notifications/notifier";
 import { Connection, Message, OnPeerError } from "./connection";
 import { HostConnection } from "./host";
 
-export class PlayerConnection extends Connection {
+export interface PlayerEvents {
+  roomNotFound: string;
+  stateChange: unknown;
+}
+
+export class PlayerConnection extends Connection<PlayerEvents> {
   static generatePeerId() {
     return `DJLASER-mafia-player-${Connection.generateId(10)}`;
   }
 
   readonly roomId: string;
 
-  constructor(roomId: string, notifier: Notifier) {
-    super(PlayerConnection.generatePeerId(), notifier);
+  constructor(roomId: string) {
+    super(PlayerConnection.generatePeerId());
 
     this.roomId = roomId;
   }
@@ -26,17 +30,18 @@ export class PlayerConnection extends Connection {
     connection.close();
   }
 
-  protected handleError(error: OnPeerError): void {
+  protected handleError(error: OnPeerError): boolean {
     if (error.type == "peer-unavailable") {
-      this.notifier.setNotification({
-        color: "error",
-        text: `Failed to connect: Room ${this.roomId} does not exist`,
-      });
+      this.emit(
+        "roomNotFound",
+        `Failed to connect: Room ${this.roomId} does not exist`,
+      );
 
       this.destroy();
-    } else {
-      console.log("Unexpected error: " + error);
+      return true;
     }
+
+    return false;
   }
 
   private joinRoom() {
@@ -69,11 +74,7 @@ export class PlayerConnection extends Connection {
 
       switch (message.type) {
         case "ConnectionAccepted":
-          this.notifier.setNotification({
-            color: "success",
-            text: "Succesfully connected to: " + this.roomId,
-          });
-
+          console.log(`Succesfully connected to: ${this.roomId}`);
           break;
       }
     });

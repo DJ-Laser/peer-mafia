@@ -1,15 +1,25 @@
 import { useCallback } from "react";
+import { useNavigate } from "react-router";
 import { PlayerConnection } from "../components/connection/player";
-import { getNotifier } from "../components/notifications/notifier";
 import { useConnection } from "../hooks/useConnection";
+import { useNotifier } from "../hooks/useNotifier";
 import { Route } from "./+types/play";
 
 export default function Component({ params }: Route.ComponentProps) {
+  const notifier = useNotifier();
+  const navigate = useNavigate();
+
   const playerConnection = useConnection(
-    useCallback(
-      () => new PlayerConnection(params.roomId, getNotifier()),
-      [params.roomId],
-    ),
+    notifier,
+    useCallback(() => {
+      const connection = new PlayerConnection(params.roomId);
+      connection.on("roomNotFound", (error: string) => {
+        notifier.setNotification({ color: "error", text: error });
+        navigate("/");
+      });
+
+      return connection;
+    }, [navigate, notifier, params.roomId]),
   );
 
   return (

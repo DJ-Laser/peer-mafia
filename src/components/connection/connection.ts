@@ -1,5 +1,5 @@
+import EventEmitter from "eventemitter3";
 import Peer, { DataConnection, PeerError } from "peerjs";
-import { Notifier } from "../notifications/notifier";
 
 export const ID_ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 export const ID_NUM_CHARS = 5;
@@ -21,9 +21,15 @@ export type OnPeerError = PeerError<
   | "webrtc"
 >;
 
+export interface ConnectionEvents {
+  error: string;
+}
+
 export type Message = { type: "ConnectionAccepted" };
 
-export abstract class Connection {
+export abstract class Connection<
+  Events extends EventEmitter.ValidEventTypes,
+> extends EventEmitter<ConnectionEvents | Events> {
   static generateId(numChars: number): string {
     let id = "";
 
@@ -35,13 +41,13 @@ export abstract class Connection {
     return id;
   }
 
-  protected notifier: Notifier;
   protected peer: Peer;
   protected readonly uuid: string;
   protected readonly peerId: string;
 
-  constructor(peerId: string, notifier: Notifier) {
-    this.notifier = notifier;
+  constructor(peerId: string) {
+    super();
+
     this.peerId = peerId;
 
     const uuid = localStorage.getItem(UUID_STORAGE_KEY);
@@ -61,7 +67,7 @@ export abstract class Connection {
 
     // These have to be lambdas or else `this` becomes the peer for some reason
     this.peer.on("connection", (conn) => this.handleConnection(conn));
-    this.peer.on("error", (error) => this.handleError(error));
+    this.peer.on("error", (error) => this.onPeerError(error));
     this.peer.on("open", (id) => this.onReady(id));
   }
 
@@ -70,12 +76,10 @@ export abstract class Connection {
   }
 
   protected attemptReconnect() {
-    console.log("Connection disconnected");
     if (this.canReconnect()) {
       setTimeout(() => {
         // Peer state may have changed between check and now
         if (this.canReconnect()) {
-          console.log("Connection reconnecting");
           this.peer.reconnect();
         }
       }, 500);
@@ -91,10 +95,17 @@ export abstract class Connection {
 
   destroy() {
     this.peer.destroy();
-    console.log("Connection manually destroyed");
+  }
+
+  private onPeerError(error: OnPeerError) {
+    if (!this.handleError(error)) {
+      console.log("Unexpected error: " + error);
+
+      this.emit("error", error.message);
+    }
   }
 
   protected abstract onReady(id: string): void;
   protected abstract handleConnection(connection: DataConnection): void;
-  protected abstract handleError(error: OnPeerError): void;
+  protected abstract handleError(error: OnPeerError): boolean;
 }
