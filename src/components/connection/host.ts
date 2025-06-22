@@ -7,14 +7,18 @@ import {
 } from "./sharedData";
 
 export interface HostEvents {
-  stateChange: unknown;
+  stateChange: GameState;
 }
 
-interface Player {
+export interface Player {
   uuid: string;
   name: string;
   connection: DataConnection;
   connected: boolean;
+}
+
+export interface GameState {
+  players: Player[];
 }
 
 export class HostConnection extends Connection<HostEvents> {
@@ -27,7 +31,13 @@ export class HostConnection extends Connection<HostEvents> {
   }
 
   readonly roomId: string;
-  players: Player[] = [];
+  state: GameState = {
+    players: [],
+  };
+
+  private get players() {
+    return this.state.players;
+  }
 
   constructor() {
     const roomId = HostConnection.generateRoomId();
@@ -42,12 +52,18 @@ export class HostConnection extends Connection<HostEvents> {
     };
 
     this.sendToPlayer(player, { type: "StateUpdate", newState: playerState });
+    console.log("Players: ", this.players);
+  }
+
+  private emitStateEvent() {
+    this.emit("stateChange", this.state);
   }
 
   private onPlayerData(player: Player, message: Message) {
     switch (message.type) {
       case "NameChange": {
         player.name = message.name;
+        this.emitStateEvent();
 
         this.sendPlayerState(player);
         break;
@@ -97,6 +113,7 @@ export class HostConnection extends Connection<HostEvents> {
     });
 
     this.players.push(newPlayer);
+    this.emitStateEvent();
   }
 
   protected handleError(): boolean {
