@@ -1,7 +1,7 @@
 import EventEmitter from "eventemitter3";
 import { useEffect, useState } from "react";
-import { Connection } from "../components/connection/connection";
 import { Notifier } from "../components/notifications/notifier";
+import { Connection } from "../game/connection/connection";
 
 export function useConnection<
   E extends EventEmitter.ValidEventTypes,

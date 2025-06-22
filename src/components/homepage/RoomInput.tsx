@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
-import { ID_NUM_CHARS } from "../connection/connection";
+import { ID_NUM_CHARS } from "../../game/connection";
 
 const ROOM_CODE_LENGTH = ID_NUM_CHARS;
 

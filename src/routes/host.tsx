@@ -1,9 +1,5 @@
 import { useCallback, useState } from "react";
-import {
-  GameState,
-  HostConnection,
-  Player,
-} from "../components/connection/host";
+import { GameState, HostConnection, Player } from "../game/host";
 import { useConnection } from "../hooks/useConnection";
 import { useNotifier } from "../hooks/useNotifier";
 

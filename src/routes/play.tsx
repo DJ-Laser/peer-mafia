@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router";
-import { PlayerConnection } from "../components/connection/player";
+import { PlayerConnection } from "../game/player";
 import { useConnection } from "../hooks/useConnection";
 import { useNotifier } from "../hooks/useNotifier";
 import { Route } from "./+types/play";
