@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
-import { PlayerConnection } from "../game/player";
-import { useNotifier } from "../hooks/useNotifier";
-import { Route } from "./+types/play";
+import { Route } from "../+types/play";
+import { PlayerConnection } from "../../game/player";
+import { useNotifier } from "../../hooks/useNotifier";
 
 export type PlayConnectionData =
   | {
