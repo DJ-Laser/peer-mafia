@@ -1,18 +1,12 @@
 import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router";
-import { Home } from "../pages/Home";
+import { useNavigate } from "react-router";
 
 export default function Component() {
-  const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (location.pathname !== "/") {
-      navigate("/", {
-        replace: true,
-      });
-    }
-  }, [location.pathname, navigate]);
+    navigate("/", { replace: true });
+  }, [navigate]);
 
-  return <Home />;
+  return;
 }

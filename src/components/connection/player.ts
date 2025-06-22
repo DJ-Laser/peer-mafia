@@ -4,12 +4,21 @@ import { Connection, Message, OnPeerError } from "./connection";
 import { HostConnection } from "./host";
 
 export class PlayerConnection extends Connection {
+  static generatePeerId() {
+    return `DJLASER-mafia-player-${Connection.generateId(10)}`;
+  }
+
   readonly roomId: string;
 
   constructor(roomId: string, notifier: Notifier) {
-    super((uuid) => `DJLASER-mafia-player-${uuid}`, notifier);
+    super(PlayerConnection.generatePeerId(), notifier);
 
     this.roomId = roomId;
+  }
+
+  protected onReady(id: string): void {
+    console.log(`Player id: ${id}`);
+    this.joinRoom();
   }
 
   protected handleConnection(connection: DataConnection): void {
@@ -23,26 +32,46 @@ export class PlayerConnection extends Connection {
         color: "error",
         text: `Failed to connect: Room ${this.roomId} does not exist`,
       });
+
+      this.destroy();
     } else {
       console.log("Unexpected error: " + error);
     }
   }
 
-  public joinRoom(roomId: string) {
-    const dataConnection = this.peer.connect(
-      HostConnection.generatePeerId(roomId),
-      { label: `player-${this.uuid}`, metadata: { playerUuid: this.uuid } },
-    );
+  private joinRoom() {
+    const hostId = HostConnection.generatePeerId(this.roomId);
+    console.log(`Joining id: ${hostId}`);
+
+    const dataConnection = this.peer.connect(hostId, {
+      label: `player-${this.uuid}`,
+      metadata: { playerUuid: this.uuid },
+      reliable: true,
+    });
+
+    console.log("Created connection: ", dataConnection);
+
+    dataConnection.on("error", (error) => {
+      console.log("Data channel error: ", error);
+    });
+
+    dataConnection.on("close", () => {
+      console.log("Data channel closed");
+    });
+
+    dataConnection.on("open", () => {
+      console.log("Data channel opened");
+    });
 
     dataConnection.on("data", (data: unknown) => {
       const message = data as Message;
-      console.log(data);
+      console.log("Data channel data: ", data);
 
       switch (message.type) {
         case "ConnectionAccepted":
           this.notifier.setNotification({
             color: "success",
-            text: "Succesfully connected to: " + roomId,
+            text: "Succesfully connected to: " + this.roomId,
           });
 
           break;

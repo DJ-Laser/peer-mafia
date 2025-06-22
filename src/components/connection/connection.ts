@@ -24,13 +24,25 @@ export type OnPeerError = PeerError<
 export type Message = { type: "ConnectionAccepted" };
 
 export abstract class Connection {
+  static generateId(numChars: number): string {
+    let id = "";
+
+    for (let i = 0; i < numChars; i++) {
+      const charIdx = Math.floor(Math.random() * ID_ALLOWED_CHARS.length);
+      id += ID_ALLOWED_CHARS.charAt(charIdx);
+    }
+
+    return id;
+  }
+
   protected notifier: Notifier;
   protected peer: Peer;
   protected readonly uuid: string;
   protected readonly peerId: string;
 
-  constructor(peerIdFun: (uuid: string) => string, notifier: Notifier) {
+  constructor(peerId: string, notifier: Notifier) {
     this.notifier = notifier;
+    this.peerId = peerId;
 
     const uuid = localStorage.getItem(UUID_STORAGE_KEY);
     if (uuid !== null) {
@@ -41,20 +53,32 @@ export abstract class Connection {
       this.uuid = uuid;
     }
 
-    this.peerId = peerIdFun(this.uuid);
     this.peer = new Peer(this.peerId);
 
     this.peer.on("disconnected", () => {
       this.attemptReconnect();
     });
 
-    this.peer.on("connection", this.handleConnection);
-    this.peer.on("error", this.handleError);
+    // These have to be lambdas or else `this` becomes the peer for some reason
+    this.peer.on("connection", (conn) => this.handleConnection(conn));
+    this.peer.on("error", (error) => this.handleError(error));
+    this.peer.on("open", (id) => this.onReady(id));
+  }
+
+  private canReconnect(): boolean {
+    return this.peer.disconnected && !this.peer.destroyed;
   }
 
   protected attemptReconnect() {
-    if (this.peer.disconnected && !this.peer.destroyed) {
-      this.peer.reconnect();
+    console.log("Connection disconnected");
+    if (this.canReconnect()) {
+      setTimeout(() => {
+        // Peer state may have changed between check and now
+        if (this.canReconnect()) {
+          console.log("Connection reconnecting");
+          this.peer.reconnect();
+        }
+      }, 500);
     }
   }
 
@@ -65,7 +89,12 @@ export abstract class Connection {
     return connection.send(message);
   }
 
-  protected abstract handleConnection(connection: DataConnection): void;
+  destroy() {
+    this.peer.destroy();
+    console.log("Connection manually destroyed");
+  }
 
+  protected abstract onReady(id: string): void;
+  protected abstract handleConnection(connection: DataConnection): void;
   protected abstract handleError(error: OnPeerError): void;
 }

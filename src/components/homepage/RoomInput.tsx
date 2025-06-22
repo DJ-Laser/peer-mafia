@@ -1,22 +1,20 @@
 import { useCallback, useState } from "react";
+import { useNavigate } from "react-router";
+import { ID_NUM_CHARS } from "../connection/connection";
 
-export interface RoomInputProps {
-  onJoinGame: (code: string) => void;
-  onInvalidCode: (code: string) => void;
-}
+const ROOM_CODE_LENGTH = ID_NUM_CHARS;
 
-const CODE_LENGTH = 5;
-
-export function RoomInput({ onJoinGame, onInvalidCode }: RoomInputProps) {
+export function RoomInput() {
   const [code, setCode] = useState("");
+  const navigate = useNavigate();
+
   const handleSubmit = useCallback(() => {
-    if (code.length < CODE_LENGTH) {
-      onInvalidCode(code);
+    if (code.length < ROOM_CODE_LENGTH) {
       return;
     }
 
-    onJoinGame(code);
-  }, [code, onJoinGame, onInvalidCode]);
+    navigate(`/play/${code}`);
+  }, [code, navigate]);
 
   return (
     <div>
@@ -25,7 +23,7 @@ export function RoomInput({ onJoinGame, onInvalidCode }: RoomInputProps) {
         <input
           className="px-3 py-2 w-31 h-full rounded-md bg-neutral-200 text-black text-xl border border-transparent hover:border-cyan-400 transition-colors duration-250"
           value={code}
-          maxLength={CODE_LENGTH}
+          maxLength={ROOM_CODE_LENGTH}
           placeholder="Ex. W5X7D"
           onKeyDown={(e) => {
             if (e.key == "Enter") {
@@ -34,7 +32,7 @@ export function RoomInput({ onJoinGame, onInvalidCode }: RoomInputProps) {
           }}
           onChange={(e) => {
             const newCode = e.target.value.toUpperCase();
-            const filteredCode = newCode.replace(/[^A-Z0-9]/g, "");
+            const filteredCode = newCode.replace(/[^A-Z]/g, "");
 
             if (code !== filteredCode) setCode(filteredCode);
           }}

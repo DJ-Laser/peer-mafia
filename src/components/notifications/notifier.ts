@@ -35,3 +35,8 @@ export class Notifier {
     this.listeners.splice(this.listeners.indexOf(callback), 1);
   }
 }
+
+const notifier = new Notifier();
+export function getNotifier(): Notifier {
+  return notifier;
+}
