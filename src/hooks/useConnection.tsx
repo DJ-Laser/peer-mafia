@@ -20,7 +20,7 @@ export function useConnection<
     return () => {
       innerConnection.destroy();
     };
-  }, [fn]);
+  }, [fn, notifier]);
 
   return connection;
 }
