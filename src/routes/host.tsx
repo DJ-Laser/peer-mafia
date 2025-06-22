@@ -1,25 +1,41 @@
-import { useCallback, useState } from "react";
+import { useMemo, useState } from "react";
 import { GameState, HostConnection, Player } from "../game/host";
-import { useConnection } from "../hooks/useConnection";
 import { useNotifier } from "../hooks/useNotifier";
+import { Route } from "./+types/host";
 
-export default function Component() {
+// eslint-disable-next-line react-refresh/only-export-components
+export async function clientLoader() {
+  const connection = new HostConnection();
+
+  const readyPromise = new Promise<void>((resolve) => {
+    connection.on("ready", () => resolve());
+  });
+
+  await readyPromise;
+
+  return {
+    connection,
+  };
+}
+
+export default function Component({ loaderData }: Route.ComponentProps) {
   const notifier = useNotifier();
 
   const [players, setPlayers] = useState<Player[]>([]);
 
-  const hostConnection = useConnection(
-    notifier,
-    useCallback(() => {
-      const connection = new HostConnection();
+  const hostConnection = useMemo(() => {
+    const connection = loaderData.connection;
 
-      connection?.on("stateChange", (newState: GameState) => {
-        setPlayers(newState.players);
-      });
+    connection.on("stateChange", (newState: GameState) => {
+      setPlayers(newState.players);
+    });
 
-      return connection;
-    }, []),
-  );
+    connection.on("error", (error: string) =>
+      notifier.setNotification({ color: "error", text: error }),
+    );
+
+    return connection;
+  }, [loaderData.connection, notifier]);
 
   const playersList = players.map((player) => (
     <li key={player.uuid}>{player.name}</li>

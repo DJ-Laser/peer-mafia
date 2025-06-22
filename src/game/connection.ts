@@ -1,5 +1,5 @@
 import EventEmitter from "eventemitter3";
-import Peer, { DataConnection, PeerError } from "peerjs";
+import Peer, { DataConnection, PeerError, PeerOptions } from "peerjs";
 import { Message } from "./sharedData";
 
 export const ID_ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -24,16 +24,23 @@ export type OnPeerError = PeerError<
 
 export interface ConnectionEvents {
   error: string;
+  ready: void;
 }
 
 // Calling the REST API TO fetch the TURN Server Credentials
 // PLEASE don't steal my api key :sob:
-const response = await fetch(
-  "https://djlaser-mafia.metered.live/api/v1/turn/credentials?apiKey=b84f9d5703e313de8a71a6a806a96716c3b6",
-);
+async function getPeerConfig(): Promise<PeerOptions> {
+  const response = await fetch(
+    "https://djlaser-mafia.metered.live/api/v1/turn/credentials?apiKey=b84f9d5703e313de8a71a6a806a96716c3b6",
+  );
 
-const iceServers = await response.json();
-const peerRtcConnfig: RTCConfiguration = { iceServers };
+  const iceServers = await response.json();
+  const peerRtcConnfig: RTCConfiguration = { iceServers };
+
+  return {
+    config: peerRtcConnfig,
+  };
+}
 
 export abstract class Connection<
   Events extends EventEmitter.ValidEventTypes,
@@ -49,9 +56,18 @@ export abstract class Connection<
     return id;
   }
 
-  protected peer: Peer;
+  private _peer: Peer | null;
   protected readonly uuid: string;
   protected readonly peerId: string;
+  private _destroyed: boolean = false;
+
+  protected get peer(): Peer {
+    if (this._peer == null) {
+      throw "`Connection.peer` used before initialized. Wait for the `onReady` method call";
+    }
+
+    return this._peer;
+  }
 
   constructor(peerId: string) {
     super();
@@ -67,21 +83,34 @@ export abstract class Connection<
       this.uuid = uuid;
     }
 
-    this.peer = new Peer(this.peerId, {
-      config: peerRtcConnfig,
-    });
+    this._peer = null;
 
-    this.peer.on("disconnected", () => {
-      this.attemptReconnect();
-    });
+    getPeerConfig().then((options) => {
+      this._peer = new Peer(this.peerId, options);
 
-    // These have to be lambdas or else `this` becomes the peer for some reason
-    this.peer.on("connection", (conn) => this.handleConnection(conn));
-    this.peer.on("error", (error) => this.onPeerError(error));
-    this.peer.on("open", (id) => this.onReady(id));
+      this._peer.on("disconnected", () => {
+        this.attemptReconnect();
+      });
+
+      // These have to be lambdas or else `this` becomes the peer for some reason
+      this._peer.on("connection", (conn) => this.handleConnection(conn));
+      this._peer.on("error", (error) => this.onPeerError(error));
+      this._peer.on("open", (id) => {
+        if (this._destroyed) {
+          this.destroy();
+        } else {
+          this.onReady(id);
+          this.emit("ready");
+        }
+      });
+    });
   }
 
   private canReconnect(): boolean {
+    if (this._peer == null) {
+      return false;
+    }
+
     return this.peer.disconnected && !this.peer.destroyed;
   }
 
@@ -104,7 +133,8 @@ export abstract class Connection<
   }
 
   destroy() {
-    this.peer.destroy();
+    this._peer?.destroy();
+    this._destroyed = true;
   }
 
   private onPeerError(error: OnPeerError) {

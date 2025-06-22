@@ -1,31 +1,75 @@
-import { useCallback } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { PlayerConnection } from "../game/player";
-import { useConnection } from "../hooks/useConnection";
 import { useNotifier } from "../hooks/useNotifier";
 import { Route } from "./+types/play";
 
-export default function Component({ params }: Route.ComponentProps) {
+export type PlayConnectionData =
+  | {
+      success: true;
+      connection: PlayerConnection;
+    }
+  | { success: false; error: string };
+
+// eslint-disable-next-line react-refresh/only-export-components
+export async function clientLoader({
+  params,
+}: Route.ClientLoaderArgs): Promise<PlayConnectionData> {
+  const connection = new PlayerConnection(params.roomId);
+
+  const readyPromise = new Promise<PlayConnectionData>((resolve) => {
+    connection.on("roomJoined", () =>
+      resolve({
+        success: true,
+        connection: connection,
+      }),
+    );
+
+    connection.on("roomNotFound", (error: string) => {
+      resolve({
+        success: false,
+        error,
+      });
+    });
+  });
+
+  return await readyPromise;
+}
+
+export default function Component({ loaderData }: Route.ComponentProps) {
   const notifier = useNotifier();
   const navigate = useNavigate();
 
-  const playerConnection = useConnection(
-    notifier,
-    useCallback(() => {
-      const connection = new PlayerConnection(params.roomId);
-      connection.on("roomNotFound", (error: string) => {
-        notifier.setNotification({ color: "error", text: error });
-        navigate("/");
-      });
+  useEffect(() => {
+    if (!loaderData.success) {
+      notifier.setNotification({ color: "error", text: loaderData.error });
+      navigate("/play");
+    }
+  }, [loaderData, navigate, notifier]);
 
-      return connection;
-    }, [navigate, notifier, params.roomId]),
-  );
+  const playerConnection: PlayerConnection | null = useMemo(() => {
+    if (!loaderData.success) {
+      return null;
+    }
+
+    const connection = loaderData.connection;
+
+    connection.on("error", (error: string) =>
+      notifier.setNotification({ color: "error", text: error }),
+    );
+
+    return connection;
+  }, [notifier, loaderData]);
+
+  if (playerConnection === null) {
+    // Were navigating back anyway
+    return;
+  }
 
   return (
     <div className="mx-auto my-0 max-w-320 w-fit p-8 text-center">
       <h1 className="text-2xl">Playing</h1>
-      <h1 className="text-xl">Code: {playerConnection?.roomId ?? ""}</h1>
+      <h1 className="text-xl">Code: {playerConnection.roomId ?? ""}</h1>
     </div>
   );
 }

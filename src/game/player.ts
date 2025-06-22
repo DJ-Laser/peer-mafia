@@ -5,6 +5,7 @@ import { Message, PlayerConnectionMetadata } from "./sharedData";
 
 export interface PlayerEvents {
   roomNotFound: string;
+  roomJoined: void;
   stateChange: unknown;
 }
 
@@ -53,6 +54,10 @@ export class PlayerConnection extends Connection<PlayerEvents> {
       label: `player-${this.uuid}`,
       metadata: { playerUuid: this.uuid } as PlayerConnectionMetadata,
       reliable: true,
+    });
+
+    dataConnection.on("open", () => {
+      this.emit("roomJoined");
     });
 
     dataConnection.on("error", (error) => {
