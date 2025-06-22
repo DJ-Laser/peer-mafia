@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
+import { Card } from "../../components/generic/Card";
 import { ID_NUM_CHARS } from "../../game/connection";
 
 const ROOM_CODE_LENGTH = ID_NUM_CHARS;
@@ -8,23 +9,27 @@ export function RoomInput() {
   const [code, setCode] = useState("");
   const navigate = useNavigate();
 
+  const canSubmit = code.length === ROOM_CODE_LENGTH;
+
   const handleSubmit = useCallback(() => {
-    if (code.length < ROOM_CODE_LENGTH) {
+    if (!canSubmit) {
       return;
     }
 
     navigate(`/play/${code}`);
-  }, [code, navigate]);
+  }, [canSubmit, code, navigate]);
 
   return (
-    <div>
-      <h1 className="text-4xl text-center mb-4">Enter a Room Code</h1>
+    <Card>
+      <h1 className="text-4xl font-semibold text-center mb-6">Join a Game</h1>
+      <label className="block text-sm font-medium text-slate-300 mb-1">
+        Enter your {ROOM_CODE_LENGTH} letter room code
+      </label>
       <span className="flex flex-row flex-nowrap gap-5 justify-center">
         <input
-          className="px-3 py-2 w-31 h-full rounded-md bg-neutral-200 text-black text-xl border border-transparent hover:border-cyan-400 transition-colors duration-250"
+          className="px-3 py-2 min-w-32 rounded-md bg-slate-700 text-slate-100 text-xl border border-slate-600 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-400 transition-colors duration-250"
           value={code}
           maxLength={ROOM_CODE_LENGTH}
-          placeholder="Ex. W5X7D"
           onKeyDown={(e) => {
             if (e.key == "Enter") {
               handleSubmit();
@@ -38,19 +43,20 @@ export function RoomInput() {
           }}
         />
         <button
-          className="px-5 py-2 rounded-md bg-neutral-900 text-xl border border-transparent hover:border-cyan-400 cursor-pointer transition-colors duration-250"
+          className="px-5 py-2 rounded-md hover:scale-105 disabled:scale-none bg-sky-600 disabled:bg-slate-600 text-l font-semibold border border-transparent  cursor-pointer disabled:cursor-not-allowed transition-all duration-200"
+          disabled={!canSubmit}
           onClick={handleSubmit}
         >
           Join Game
         </button>
       </span>
-    </div>
+    </Card>
   );
 }
 
 export default function Component() {
   return (
-    <div className="mx-auto my-0 max-w-320 w-fit p-8 text-center">
+    <div className="mx-auto my-0 max-w-320 w-fit p-8">
       <RoomInput />
     </div>
   );
