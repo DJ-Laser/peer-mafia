@@ -1,6 +1,7 @@
 import { DataConnection } from "peerjs";
-import { Connection, Message, OnPeerError } from "./connection";
+import { Connection, OnPeerError } from "./connection";
 import { HostConnection } from "./host";
+import { Message, PlayerConnectionMetadata } from "./sharedData";
 
 export interface PlayerEvents {
   roomNotFound: string;
@@ -50,11 +51,9 @@ export class PlayerConnection extends Connection<PlayerEvents> {
 
     const dataConnection = this.peer.connect(hostId, {
       label: `player-${this.uuid}`,
-      metadata: { playerUuid: this.uuid },
+      metadata: { playerUuid: this.uuid } as PlayerConnectionMetadata,
       reliable: true,
     });
-
-    console.log("Created connection: ", dataConnection);
 
     dataConnection.on("error", (error) => {
       console.log("Data channel error: ", error);
@@ -64,17 +63,13 @@ export class PlayerConnection extends Connection<PlayerEvents> {
       console.log("Data channel closed");
     });
 
-    dataConnection.on("open", () => {
-      console.log("Data channel opened");
-    });
-
     dataConnection.on("data", (data: unknown) => {
       const message = data as Message;
       console.log("Data channel data: ", data);
 
       switch (message.type) {
-        case "ConnectionAccepted":
-          console.log(`Succesfully connected to: ${this.roomId}`);
+        case "StateUpdate":
+          console.log("New State: ", message.newState);
           break;
       }
     });

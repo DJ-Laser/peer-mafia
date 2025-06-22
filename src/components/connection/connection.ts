@@ -1,5 +1,6 @@
 import EventEmitter from "eventemitter3";
 import Peer, { DataConnection, PeerError } from "peerjs";
+import { Message } from "./sharedData";
 
 export const ID_ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 export const ID_NUM_CHARS = 5;
@@ -25,7 +26,14 @@ export interface ConnectionEvents {
   error: string;
 }
 
-export type Message = { type: "ConnectionAccepted" };
+// Calling the REST API TO fetch the TURN Server Credentials
+// PLEASE don't steal my api key :sob:
+const response = await fetch(
+  "https://djlaser-mafia.metered.live/api/v1/turn/credentials?apiKey=b84f9d5703e313de8a71a6a806a96716c3b6",
+);
+
+const iceServers = await response.json();
+const peerRtcConnfig: RTCConfiguration = { iceServers };
 
 export abstract class Connection<
   Events extends EventEmitter.ValidEventTypes,
@@ -59,7 +67,9 @@ export abstract class Connection<
       this.uuid = uuid;
     }
 
-    this.peer = new Peer(this.peerId);
+    this.peer = new Peer(this.peerId, {
+      config: peerRtcConnfig,
+    });
 
     this.peer.on("disconnected", () => {
       this.attemptReconnect();
