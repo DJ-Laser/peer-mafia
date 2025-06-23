@@ -2,6 +2,7 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { Navbar } from "./components/Navbar";
 import { NotificationContainer } from "./components/notifications/NotificationContainer";
 import { Notifier } from "./components/notifications/notifier";
+import { Spinner } from "./components/Spinner";
 import { NotifierContext } from "./hooks/useNotifier";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -33,6 +34,17 @@ export default function Root() {
         <Navbar />
         <Outlet />
       </NotifierContext>
+    </div>
+  );
+}
+
+export function HydrateFallback() {
+  return (
+    <div className="min-h-screen bg-slate-900 text-white">
+      <Navbar />
+      <div className="size-full h-full mt-15 flex justify-center">
+        <Spinner />
+      </div>
     </div>
   );
 }
