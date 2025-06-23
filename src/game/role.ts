@@ -10,7 +10,7 @@ export interface Role {
   team: Team;
 }
 
-export const exampleTeams: { [key: string]: Team } = {
+export const exampleTeams = {
   mafia: {
     textClass: "text-red-400",
     bgClass: "bg-red-500/10",
@@ -22,9 +22,9 @@ export const exampleTeams: { [key: string]: Team } = {
     bgClass: "bg-blue-500/10",
     borderClass: "border-blue-500/30",
   },
-};
+} as const;
 
-export const exampleRoles: { [key: string]: Role } = {
+export const exampleRoles = {
   mafia: {
     name: "Mafia",
     description:
@@ -43,4 +43,4 @@ export const exampleRoles: { [key: string]: Role } = {
       "Search for clues in the night to uncover the identity of the mafia.",
     team: exampleTeams.town,
   },
-};
+} as const;

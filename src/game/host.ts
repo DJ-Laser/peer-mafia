@@ -1,9 +1,12 @@
 import { DataConnection } from "peerjs";
 import { Connection, ID_NUM_CHARS } from "./connection";
+import { exampleRoles, Role } from "./role";
 import {
   Message,
   PlayerConnectionMetadata,
+  SharedGameplayState,
   SharedPlayerState,
+  SharedPreGameState,
 } from "./sharedData";
 
 export interface HostEvents {
@@ -15,10 +18,12 @@ export interface Player {
   name: string | null;
   connection: DataConnection;
   connected: boolean;
+  role: Role;
 }
 
 export interface GameState {
   players: Player[];
+  gameStarted: boolean;
 }
 
 export class HostConnection extends Connection<HostEvents> {
@@ -33,6 +38,7 @@ export class HostConnection extends Connection<HostEvents> {
   readonly roomId: string;
   state: GameState = {
     players: [],
+    gameStarted: false,
   };
 
   private get players() {
@@ -47,8 +53,23 @@ export class HostConnection extends Connection<HostEvents> {
   }
 
   private sendPlayerState(player: Player) {
+    let stageDependentState: SharedPreGameState | SharedGameplayState;
+
+    if (this.state.gameStarted) {
+      stageDependentState = {
+        gameStarted: true,
+        role: player.role,
+      };
+    } else {
+      stageDependentState = {
+        gameStarted: false,
+        role: null,
+      };
+    }
+
     const playerState: SharedPlayerState = {
       playerName: player.name,
+      ...stageDependentState,
     };
 
     this.sendToPlayer(player, { type: "StateUpdate", newState: playerState });
@@ -100,6 +121,7 @@ export class HostConnection extends Connection<HostEvents> {
       name: null,
       connected: false,
       connection: connection,
+      role: exampleRoles.townsperson,
     };
 
     newPlayer.connected = true;

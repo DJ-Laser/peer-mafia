@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card } from "../../components/generic/Card";
 import { PlayerConnection } from "../../game/player";
-import { exampleRoles, Role } from "../../game/role";
+import { Role } from "../../game/role";
 import { SharedPlayerState } from "../../game/sharedData";
 import { useNotifier } from "../../hooks/useNotifier";
 import { Route } from "./+types/game";
@@ -116,7 +116,7 @@ function RoleCard({ role }: RoleCardProps) {
   const roleClasses = `${team.bgClass} ${team.textClass} ${team.borderClass}`;
 
   return (
-    <Card className={show ? roleClasses : "bg-slate-700/50"}>
+    <Card secondary className={show ? roleClasses : ""}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold text-white">Your Role</h3>
         <button
@@ -153,8 +153,14 @@ export default function Component({ loaderData }: Route.ComponentProps) {
   const notifier = useNotifier();
   const navigate = useNavigate();
 
-  const [name, setName] = useState<string | null>(
-    loaderData.success ? loaderData.initialState.playerName : null,
+  const [gameState, setGameState] = useState<SharedPlayerState>(
+    loaderData.success
+      ? loaderData.initialState
+      : {
+          playerName: null,
+          role: null,
+          gameStarted: false,
+        },
   );
 
   useEffect(() => {
@@ -176,7 +182,7 @@ export default function Component({ loaderData }: Route.ComponentProps) {
     );
 
     connection.on("stateChange", (state: SharedPlayerState) => {
-      setName(state.playerName);
+      setGameState(state);
     });
 
     return connection;
@@ -187,7 +193,7 @@ export default function Component({ loaderData }: Route.ComponentProps) {
     return;
   }
 
-  if (name === null) {
+  if (gameState.playerName === null) {
     return (
       <NameInputScren
         roomCode={loaderData.roomCode}
@@ -201,7 +207,16 @@ export default function Component({ loaderData }: Route.ComponentProps) {
       <h1 className="mb-8 text-3xl text-center font-bold">
         Room {loaderData.roomCode}
       </h1>
-      <RoleCard role={exampleRoles.mafia} />
+      {gameState.gameStarted ? (
+        <RoleCard role={gameState.role} />
+      ) : (
+        <Card secondary className="text-center space-y-3">
+          <h2 className="text-xl font-semibold">
+            The game has not started yet
+          </h2>
+          <p className="text-slate-400">{`You'll receive your role once the game starts`}</p>
+        </Card>
+      )}
     </Card>
   );
 }
