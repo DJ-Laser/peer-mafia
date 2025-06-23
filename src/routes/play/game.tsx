@@ -203,7 +203,7 @@ export default function Component({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <Card>
+    <Card className="max-w-3xl mx-auto">
       <h1 className="mb-8 text-3xl text-center font-bold">
         Room {loaderData.roomCode}
       </h1>
