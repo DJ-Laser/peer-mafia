@@ -1,7 +1,9 @@
+import { Eye as EyeIcon, EyeOff as EyeOffIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card } from "../../components/generic/Card";
 import { PlayerConnection } from "../../game/player";
+import { exampleRoles, Role } from "../../game/role";
 import { SharedPlayerState } from "../../game/sharedData";
 import { useNotifier } from "../../hooks/useNotifier";
 import { Route } from "./+types/game";
@@ -103,6 +105,50 @@ function NameInputScren({ roomCode, onSubmit }: NameInputScrenProps) {
   );
 }
 
+interface RoleCardProps {
+  role: Role;
+}
+
+function RoleCard({ role }: RoleCardProps) {
+  const [show, setShow] = useState(false);
+
+  const team = role.team;
+  const roleClasses = `${team.bgClass} ${team.textClass} ${team.borderClass}`;
+
+  return (
+    <Card className={show ? roleClasses : "bg-slate-700/50"}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-white">Your Role</h3>
+        <button
+          onClick={() => setShow(!show)}
+          className="flex items-center space-x-2 px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors duration-200"
+        >
+          {show ? (
+            <EyeOffIcon className="w-4 h-4 text-slate-300" />
+          ) : (
+            <EyeIcon className="w-4 h-4 text-slate-300" />
+          )}
+          <span className="text-slate-300 text-sm">
+            {show ? "Hide" : "Reveal"}
+          </span>
+        </button>
+      </div>
+      {show ? (
+        <div className="space-y-3">
+          <h4 className={`text-2xl font-bold`}>{role.name}</h4>
+          <p className="text-slate-300 leading-relaxed">{role.description}</p>
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <div className="w-16 h-16 bg-slate-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <EyeOffIcon className="w-8 h-8 text-slate-400" />
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 export default function Component({ loaderData }: Route.ComponentProps) {
   const notifier = useNotifier();
   const navigate = useNavigate();
@@ -151,9 +197,11 @@ export default function Component({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <div className="mx-auto my-0 max-w-320 w-fit p-8 text-center">
-      <h1 className="text-2xl">Playing</h1>
-      <h1 className="text-xl">Code: {playerConnection.roomId ?? ""}</h1>
-    </div>
+    <Card>
+      <h1 className="mb-8 text-3xl text-center font-bold">
+        Room {loaderData.roomCode}
+      </h1>
+      <RoleCard role={exampleRoles.mafia} />
+    </Card>
   );
 }
