@@ -7,5 +7,5 @@ export interface PlayerConnectionMetadata {
 }
 
 export interface SharedPlayerState {
-  playerName: string;
+  playerName: string | null;
 }

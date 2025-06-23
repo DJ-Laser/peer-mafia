@@ -12,7 +12,7 @@ export interface HostEvents {
 
 export interface Player {
   uuid: string;
-  name: string;
+  name: string | null;
   connection: DataConnection;
   connected: boolean;
 }
@@ -95,10 +95,12 @@ export class HostConnection extends Connection<HostEvents> {
 
     newPlayer ??= {
       uuid: metadata.playerUuid,
-      name: `Anon-${this.players.length + 1}`,
+      name: null,
       connected: false,
       connection: connection,
     };
+
+    newPlayer.connected = true;
 
     connection.on("open", () => {
       this.sendPlayerState(newPlayer);

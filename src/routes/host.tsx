@@ -37,9 +37,9 @@ export default function Component({ loaderData }: Route.ComponentProps) {
     return connection;
   }, [loaderData.connection, notifier]);
 
-  const playersList = players.map((player) => (
-    <li key={player.uuid}>{player.name}</li>
-  ));
+  const playersList = players
+    .filter((player) => player.connected && player.name !== null)
+    .map((player) => <li key={player.uuid}>{player.name}</li>);
 
   console.log("Player Names: ", playersList);
 

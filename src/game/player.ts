@@ -1,12 +1,16 @@
 import { DataConnection } from "peerjs";
 import { Connection, OnPeerError } from "./connection";
 import { HostConnection } from "./host";
-import { Message, PlayerConnectionMetadata } from "./sharedData";
+import {
+  Message,
+  PlayerConnectionMetadata,
+  SharedPlayerState,
+} from "./sharedData";
 
 export interface PlayerEvents {
   roomNotFound: string;
   roomJoined: void;
-  stateChange: unknown;
+  stateChange: SharedPlayerState;
 }
 
 export class PlayerConnection extends Connection<PlayerEvents> {
@@ -15,6 +19,7 @@ export class PlayerConnection extends Connection<PlayerEvents> {
   }
 
   readonly roomId: string;
+  dataConnection: DataConnection | null = null;
 
   constructor(roomId: string) {
     super(PlayerConnection.generatePeerId());
@@ -58,6 +63,7 @@ export class PlayerConnection extends Connection<PlayerEvents> {
 
     dataConnection.on("open", () => {
       this.emit("roomJoined");
+      this.dataConnection = dataConnection;
     });
 
     dataConnection.on("error", (error) => {
@@ -65,7 +71,7 @@ export class PlayerConnection extends Connection<PlayerEvents> {
     });
 
     dataConnection.on("close", () => {
-      console.log("Data channel closed");
+      this.dataConnection = null;
     });
 
     dataConnection.on("data", (data: unknown) => {
@@ -75,8 +81,18 @@ export class PlayerConnection extends Connection<PlayerEvents> {
       switch (message.type) {
         case "StateUpdate":
           console.log("New State: ", message.newState);
+          this.emit("stateChange", message.newState);
           break;
       }
     });
+  }
+
+  sendNameChange(newName: string) {
+    if (this.dataConnection !== null) {
+      this.sendMessage(this.dataConnection, {
+        type: "NameChange",
+        name: newName,
+      });
+    }
   }
 }

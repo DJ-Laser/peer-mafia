@@ -20,7 +20,7 @@ export function RoomInput() {
   }, [canSubmit, code, navigate]);
 
   return (
-    <Card>
+    <Card className="mx-auto my-0 max-w-320 w-fit">
       <h1 className="text-4xl font-semibold text-center mb-6">Join a Game</h1>
       <label className="block text-sm font-medium text-slate-300 mb-1">
         Enter your {ROOM_CODE_LENGTH} letter room code
@@ -55,9 +55,5 @@ export function RoomInput() {
 }
 
 export default function Component() {
-  return (
-    <div className="mx-auto my-0 max-w-320 w-fit p-8">
-      <RoomInput />
-    </div>
-  );
+  return <RoomInput />;
 }
