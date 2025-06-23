@@ -10,6 +10,7 @@ export type PlayConnectionData = { roomCode: string } & (
   | {
       success: true;
       connection: PlayerConnection;
+      initialState: SharedPlayerState;
     }
   | { success: false; error: string }
 );
@@ -22,13 +23,29 @@ export async function clientLoader({
   const connection = new PlayerConnection(roomCode);
 
   const readyPromise = new Promise<PlayConnectionData>((resolve) => {
-    connection.on("roomJoined", () =>
-      resolve({
-        success: true,
-        connection: connection,
-        roomCode,
-      }),
-    );
+    let joined = false;
+    let initialState: SharedPlayerState | undefined;
+
+    const tryResolve = () => {
+      if (joined && initialState !== undefined) {
+        resolve({
+          success: true,
+          connection: connection,
+          initialState,
+          roomCode,
+        });
+      }
+    };
+
+    connection.on("roomJoined", () => {
+      joined = true;
+      tryResolve();
+    });
+
+    connection.on("stateChange", (state: SharedPlayerState) => {
+      initialState = state;
+      tryResolve();
+    });
 
     connection.on("roomNotFound", (error: string) => {
       resolve({
@@ -90,14 +107,16 @@ export default function Component({ loaderData }: Route.ComponentProps) {
   const notifier = useNotifier();
   const navigate = useNavigate();
 
+  const [name, setName] = useState<string | null>(
+    loaderData.success ? loaderData.initialState.playerName : null,
+  );
+
   useEffect(() => {
     if (!loaderData.success) {
       notifier.setNotification({ color: "error", text: loaderData.error });
       navigate("/play");
     }
   }, [loaderData, navigate, notifier]);
-
-  const [name, setName] = useState<string | null>(null);
 
   const playerConnection: PlayerConnection | null = useMemo(() => {
     if (!loaderData.success) {
@@ -115,7 +134,7 @@ export default function Component({ loaderData }: Route.ComponentProps) {
     });
 
     return connection;
-  }, [notifier, loaderData]);
+  }, [loaderData, notifier]);
 
   if (playerConnection === null) {
     // Were navigating back anyway

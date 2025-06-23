@@ -83,12 +83,14 @@ export class HostConnection extends Connection<HostEvents> {
   protected handleConnection(connection: DataConnection): void {
     const metadata: PlayerConnectionMetadata = connection.metadata;
     let newPlayer: Player;
+    let updateExistingPlayer = false;
 
     console.log(`New connection from: ${metadata.playerUuid}`);
 
     for (const player of this.players) {
       if (player.uuid === metadata.playerUuid) {
         newPlayer = player;
+        updateExistingPlayer = true;
         break;
       }
     }
@@ -101,6 +103,7 @@ export class HostConnection extends Connection<HostEvents> {
     };
 
     newPlayer.connected = true;
+    newPlayer.connection = connection;
 
     connection.on("open", () => {
       this.sendPlayerState(newPlayer);
@@ -114,7 +117,11 @@ export class HostConnection extends Connection<HostEvents> {
       this.onPlayerData(newPlayer, message as Message);
     });
 
-    this.players.push(newPlayer);
+    if (!updateExistingPlayer) {
+      this.players.push(newPlayer);
+    }
+
+    this.sendPlayerState(newPlayer);
     this.emitStateEvent();
   }
 

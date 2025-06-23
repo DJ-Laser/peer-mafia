@@ -41,8 +41,6 @@ export default function Component({ loaderData }: Route.ComponentProps) {
     .filter((player) => player.connected && player.name !== null)
     .map((player) => <li key={player.uuid}>{player.name}</li>);
 
-  console.log("Player Names: ", playersList);
-
   return (
     <div>
       <div className="mx-auto my-0 max-w-320 w-fit p-8 text-center">
