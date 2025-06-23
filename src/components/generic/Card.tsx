@@ -12,10 +12,10 @@ export function Card({
   className: customClassName,
 }: PropsWithChildren<CardProps>) {
   const colors = secondary
-    ? "bg-slate-700/50 border-slate-600"
-    : "bg-slate-800 border-slate-700";
+    ? "rounded-lg bg-slate-700/50 border-slate-600"
+    : "rounded-2xl bg-slate-800 border-slate-700";
 
-  const className = twMerge(colors, "rounded-2xl p-8 border", customClassName);
+  const className = twMerge(colors, "p-8 border", customClassName);
 
   return <div className={className}>{children}</div>;
 }

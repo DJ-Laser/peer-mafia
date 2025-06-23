@@ -18,12 +18,14 @@ export interface Player {
   name: string | null;
   connection: DataConnection;
   connected: boolean;
+  alive: boolean;
   role: Role;
 }
 
 export interface GameState {
   players: Player[];
   gameStarted: boolean;
+  availableRoles: Role[];
 }
 
 export class HostConnection extends Connection<HostEvents> {
@@ -39,10 +41,19 @@ export class HostConnection extends Connection<HostEvents> {
   state: GameState = {
     players: [],
     gameStarted: false,
+    availableRoles: [
+      exampleRoles.townsperson,
+      exampleRoles.detective,
+      exampleRoles.mafia,
+    ],
   };
 
   private get players() {
     return this.state.players;
+  }
+
+  private get availableRoles() {
+    return this.state.availableRoles;
   }
 
   constructor() {
@@ -73,7 +84,7 @@ export class HostConnection extends Connection<HostEvents> {
     };
 
     this.sendToPlayer(player, { type: "StateUpdate", newState: playerState });
-    console.log("Players: ", this.players);
+    this.emitStateEvent();
   }
 
   private emitStateEvent() {
@@ -84,9 +95,8 @@ export class HostConnection extends Connection<HostEvents> {
     switch (message.type) {
       case "NameChange": {
         player.name = message.name;
-        this.emitStateEvent();
-
         this.sendPlayerState(player);
+
         break;
       }
 
@@ -121,7 +131,8 @@ export class HostConnection extends Connection<HostEvents> {
       name: null,
       connected: false,
       connection: connection,
-      role: exampleRoles.townsperson,
+      alive: true,
+      role: this.availableRoles[0],
     };
 
     newPlayer.connected = true;
@@ -144,7 +155,6 @@ export class HostConnection extends Connection<HostEvents> {
     }
 
     this.sendPlayerState(newPlayer);
-    this.emitStateEvent();
   }
 
   protected handleError(): boolean {
@@ -164,5 +174,11 @@ export class HostConnection extends Connection<HostEvents> {
     message: Message,
   ): void | Promise<void> {
     return this.sendMessage(player.connection, message);
+  }
+
+  setRole(player: Player, role: Role) {
+    player.role = role;
+
+    this.sendPlayerState(player);
   }
 }

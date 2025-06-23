@@ -1,5 +1,16 @@
-import { useMemo, useState } from "react";
+import {
+  ChevronDownIcon,
+  GhostIcon,
+  LinkIcon,
+  UserIcon,
+  UserXIcon,
+} from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { useHref } from "react-router";
+import { twMerge } from "tailwind-merge";
+import { Card } from "../components/generic/Card";
 import { GameState, HostConnection, Player } from "../game/host";
+import { Role } from "../game/role";
 import { useNotifier } from "../hooks/useNotifier";
 import { Route } from "./+types/host";
 
@@ -15,19 +26,143 @@ export async function clientLoader() {
 
   return {
     connection,
+    initialState: connection.state,
   };
 }
+
+interface HeaderProps {
+  roomCode: string;
+}
+
+function Header({ roomCode }: HeaderProps) {
+  const playUrl =
+    window.location.host + useHref(`/play/${roomCode}`, { relative: "path" });
+
+  return (
+    <Card className="flex justify-between">
+      <div className="flex">
+        <div className="hidden lg:block py-1 space-y-1.5">
+          <h1 className="text-3xl font-semibold">Host Dashboard</h1>
+          <p className="text-slate-400 text-sm">Manage your mafia game</p>
+        </div>
+
+        <div className="hidden lg:block ml-5 mr-2 border border-slate-400" />
+
+        <div className="space-y-0.5">
+          <button className="px-3 py-1 hover:bg-slate-700 rounded-lg transition-colors duration-200">
+            <h1 className="text-3xl font-semibold">{roomCode}</h1>
+          </button>
+          <p className="px-3 text-slate-400 text-sm">Click to copy</p>
+        </div>
+      </div>
+      <div className="space-y-0.5 shrink overflow-x-hidden">
+        <button className="ml-auto px-3 py-1 h-11 flex items-center space-x-5 hover:bg-slate-700 rounded-lg transition-colors duration-200">
+          <LinkIcon />
+          <h3 className="font-semibold text-xl">Copy Link</h3>
+        </button>
+        <p className="text-slate-400 text-sm whitespace-nowrap overflow-x-hidden text-ellipsis">
+          {playUrl}
+        </p>
+      </div>
+    </Card>
+  );
+}
+
+interface PlayerInfoProps {
+  player: Player;
+  availableRoles: Role[];
+  dispatch: HostDispatch;
+}
+
+function PlayerInfo({ player, availableRoles, dispatch }: PlayerInfoProps) {
+  const team = player.role.team;
+  const roleColors = `${team.bgClass} ${team.borderClass}`;
+
+  return (
+    <Card
+      secondary
+      className={twMerge(player.alive ? roleColors : undefined, "p-4")}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4">
+            <div className="w-10 h-10 bg-slate-800/50 border border-slate-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-semibold">
+                {player.alive ? <UserIcon /> : <GhostIcon />}
+              </span>
+            </div>
+          </div>
+          <div>
+            <h3 className="font-semibold text-white">{player.name}</h3>
+            <div className="relative">
+              <select
+                value={player.role.name}
+                onChange={(e) => {
+                  const selectedRoleName = e.target.value;
+                  const selectedRole = availableRoles.find(
+                    (role) => role.name === selectedRoleName,
+                  );
+
+                  if (selectedRole === undefined) {
+                    return;
+                  }
+
+                  dispatch({
+                    action: "changeRole",
+                    player,
+                    role: selectedRole,
+                  });
+                }}
+                className="appearance-none bg-slate-600 border border-slate-500 rounded-lg px-3 py-1 pr-8 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:bg-slate-500"
+              >
+                {availableRoles.map((role) => (
+                  <option
+                    key={role.name}
+                    value={role.name}
+                    className="bg-slate-600"
+                  >
+                    {role.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => dispatch({ action: "kick", player })}
+            className="flex items-center space-x-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+          >
+            <UserXIcon className="w-4 h-4" />
+            <span>Kick</span>
+          </button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+type HostAction =
+  | { action: "kick"; player: Player }
+  | { action: "changeRole"; player: Player; role: Role };
+
+type HostDispatch = (action: HostAction) => void;
 
 export default function Component({ loaderData }: Route.ComponentProps) {
   const notifier = useNotifier();
 
-  const [players, setPlayers] = useState<Player[]>([]);
+  const [gameState, setGameState] = useState<GameState>(
+    loaderData.initialState,
+  );
 
   const hostConnection = useMemo(() => {
     const connection = loaderData.connection;
 
-    connection.on("stateChange", (newState: GameState) => {
-      setPlayers(newState.players);
+    connection.on("stateChange", (state: GameState) => {
+      setGameState({ ...state });
+      console.log("New state", state);
     });
 
     connection.on("error", (error: string) =>
@@ -37,17 +172,40 @@ export default function Component({ loaderData }: Route.ComponentProps) {
     return connection;
   }, [loaderData.connection, notifier]);
 
-  const playersList = players
+  const dispatch = useCallback(
+    (action: HostAction) => {
+      switch (action.action) {
+        case "changeRole": {
+          hostConnection.setRole(action.player, action.role);
+          break;
+        }
+      }
+
+      // TODO: Implement actions
+      console.log(action);
+      console.log(hostConnection);
+    },
+    [hostConnection],
+  );
+
+  const playersList = gameState.players
     .filter((player) => player.connected && player.name !== null)
-    .map((player) => <li key={player.uuid}>{player.name}</li>);
+    .map((player) => (
+      <PlayerInfo
+        key={player.uuid}
+        player={player}
+        availableRoles={gameState.availableRoles}
+        dispatch={dispatch}
+      />
+    ));
 
   return (
-    <div>
-      <div className="mx-auto my-0 max-w-320 w-fit p-8 text-center">
-        <h1 className="text-2xl">Hosting</h1>
-        <h1 className="text-xl">Code: {hostConnection?.roomId ?? ""}</h1>
-      </div>
-      <ul>{playersList}</ul>
+    <div className="max-w-6xl mx-auto space-y-8">
+      <Header roomCode={hostConnection.roomId} />
+      <Card className="space-y-4">
+        <h1 className="text-3xl font-semibold">Players</h1>
+        <ul>{playersList}</ul>
+      </Card>
     </div>
   );
 }
