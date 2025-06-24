@@ -191,8 +191,19 @@ export class HostConnection extends Connection<HostEvents> {
     this.emitStateEvent();
   }
 
+  setLiving(player: Player, alive: boolean) {
+    player.alive = alive;
+
+    this.sendPlayerState(player);
+    this.emitStateEvent();
+  }
+
   setgameStarted(gameStarted: boolean) {
     this.state.gameStarted = gameStarted;
+    for (const player of this.players) {
+      player.alive = true;
+    }
+
     this.updateAllPlayers();
   }
 

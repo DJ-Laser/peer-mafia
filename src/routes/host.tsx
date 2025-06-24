@@ -109,13 +109,94 @@ function Header({ roomCode }: HeaderProps) {
   );
 }
 
-interface PlayerInfoProps {
+interface RoleSelectorProps {
   player: Player;
   availableRoles: Role[];
   dispatch: HostDispatch;
 }
 
-function PlayerInfo({ player, availableRoles, dispatch }: PlayerInfoProps) {
+function RoleSelector({ player, availableRoles, dispatch }: RoleSelectorProps) {
+  return (
+    <div className="relative">
+      <select
+        value={player.role.name}
+        onChange={(e) => {
+          const selectedRoleName = e.target.value;
+          const selectedRole = availableRoles.find(
+            (role) => role.name === selectedRoleName,
+          );
+
+          if (selectedRole === undefined) {
+            return;
+          }
+
+          dispatch({
+            action: "changeRole",
+            player,
+            role: selectedRole,
+          });
+        }}
+        className="appearance-none bg-slate-600 border border-slate-500 rounded-lg px-3 py-1 pr-8 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:bg-slate-500"
+      >
+        {availableRoles.map((role) => (
+          <option key={role.name} value={role.name} className="bg-slate-600">
+            {role.name}
+          </option>
+        ))}
+      </select>
+      <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+    </div>
+  );
+}
+
+interface AliveDeadSelectorProps {
+  player: Player;
+  dispatch: HostDispatch;
+}
+
+function AliveDeadSelector({ player, dispatch }: AliveDeadSelectorProps) {
+  return (
+    <div className="relative">
+      <select
+        value={player.alive ? "alive" : "dead"}
+        onChange={(e) => {
+          const value = e.target.value;
+          console.log(e.target.value);
+          console.log(player.alive);
+
+          dispatch({
+            action: "setLiving",
+            player,
+            alive: value === "alive",
+          });
+        }}
+        className="appearance-none bg-slate-600 border border-slate-500 rounded-lg px-3 py-1 pr-8 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:bg-slate-500"
+      >
+        <option value="alive" className="bg-slate-600">
+          Alive
+        </option>
+        <option value="dead" className="bg-slate-600">
+          Dead
+        </option>
+      </select>
+      <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+    </div>
+  );
+}
+
+interface PlayerInfoProps {
+  player: Player;
+  availableRoles: Role[];
+  gameStarted: boolean;
+  dispatch: HostDispatch;
+}
+
+function PlayerInfo({
+  player,
+  availableRoles,
+  gameStarted,
+  dispatch,
+}: PlayerInfoProps) {
   const team = player.role.team;
   const roleColors = `${team.bgClass} ${team.borderClass}`;
 
@@ -135,39 +216,20 @@ function PlayerInfo({ player, availableRoles, dispatch }: PlayerInfoProps) {
           </div>
           <div>
             <h3 className="font-semibold text-white">{player.name}</h3>
-            <div className="relative">
-              <select
-                value={player.role.name}
-                onChange={(e) => {
-                  const selectedRoleName = e.target.value;
-                  const selectedRole = availableRoles.find(
-                    (role) => role.name === selectedRoleName,
-                  );
-
-                  if (selectedRole === undefined) {
-                    return;
-                  }
-
-                  dispatch({
-                    action: "changeRole",
-                    player,
-                    role: selectedRole,
-                  });
-                }}
-                className="appearance-none bg-slate-600 border border-slate-500 rounded-lg px-3 py-1 pr-8 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:bg-slate-500"
-              >
-                {availableRoles.map((role) => (
-                  <option
-                    key={role.name}
-                    value={role.name}
-                    className="bg-slate-600"
-                  >
-                    {role.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-            </div>
+            {gameStarted ? (
+              <div className="flex space-x-4 items-center">
+                <p className={`font-semibold ${team.textClass}`}>
+                  {player.role.name}
+                </p>
+                <AliveDeadSelector player={player} dispatch={dispatch} />
+              </div>
+            ) : (
+              <RoleSelector
+                player={player}
+                availableRoles={availableRoles}
+                dispatch={dispatch}
+              />
+            )}
           </div>
         </div>
 
@@ -188,10 +250,16 @@ function PlayerInfo({ player, availableRoles, dispatch }: PlayerInfoProps) {
 interface PlayerListProps {
   players: Player[];
   availableRoles: Role[];
+  gameStarted: boolean;
   dispatch: HostDispatch;
 }
 
-function PlayerList({ players, availableRoles, dispatch }: PlayerListProps) {
+function PlayerList({
+  players,
+  availableRoles,
+  gameStarted,
+  dispatch,
+}: PlayerListProps) {
   const playersList = players
     .filter((player) => player.connected && player.name !== null)
     .map((player) => (
@@ -199,6 +267,7 @@ function PlayerList({ players, availableRoles, dispatch }: PlayerListProps) {
         key={player.uuid}
         player={player}
         availableRoles={availableRoles}
+        gameStarted={gameStarted}
         dispatch={dispatch}
       />
     ));
@@ -305,7 +374,8 @@ type HostAction =
   | { action: "startGame" }
   | { action: "endGame" }
   | { action: "kickPlayer"; player: Player }
-  | { action: "changeRole"; player: Player; role: Role };
+  | { action: "changeRole"; player: Player; role: Role }
+  | { action: "setLiving"; player: Player; alive: boolean };
 
 type HostDispatch = (action: HostAction) => void;
 
@@ -335,6 +405,11 @@ export default function Component({ loaderData }: Route.ComponentProps) {
       switch (action.action) {
         case "changeRole": {
           hostConnection.setRole(action.player, action.role);
+          break;
+        }
+
+        case "setLiving": {
+          hostConnection.setLiving(action.player, action.alive);
           break;
         }
 
@@ -372,6 +447,7 @@ export default function Component({ loaderData }: Route.ComponentProps) {
       <PlayerList
         players={gameState.players}
         availableRoles={gameState.availableRoles}
+        gameStarted={gameState.gameStarted}
         dispatch={dispatch}
       />
     </div>
