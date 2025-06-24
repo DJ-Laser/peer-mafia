@@ -70,6 +70,7 @@ export class HostConnection extends Connection<HostEvents> {
       stageDependentState = {
         gameStarted: true,
         role: player.role,
+        alive: player.alive,
       };
     } else {
       stageDependentState = {

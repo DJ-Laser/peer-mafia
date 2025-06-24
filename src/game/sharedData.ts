@@ -10,13 +10,14 @@ export interface PlayerConnectionMetadata {
 }
 
 export interface SharedPreGameState {
-  role: null;
   gameStarted: false;
+  role: null;
 }
 
 export interface SharedGameplayState {
-  role: Role;
   gameStarted: true;
+  role: Role;
+  alive: boolean;
 }
 
 export type SharedPlayerState = {

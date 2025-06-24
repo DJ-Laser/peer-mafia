@@ -219,12 +219,23 @@ export default function Component({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <Card className="max-w-3xl mx-auto">
+    <Card className="max-w-3xl mx-auto space-y-8">
       <h1 className="mb-8 text-3xl text-center font-bold">
         Room {loaderData.roomCode}
       </h1>
       {gameState.gameStarted ? (
-        <RoleCard role={gameState.role} />
+        <>
+          {gameState.alive ? null : (
+            <Card secondary className="text-center space-y-3">
+              <h1 className="text-xl font-semibold">You have died.</h1>
+              <p>
+                As a ghost you may awaken during the night, but you may not talk
+                or give information to the players in any other way.
+              </p>
+            </Card>
+          )}
+          <RoleCard role={gameState.role} />
+        </>
       ) : (
         <Card secondary className="text-center space-y-3">
           <h2 className="text-xl font-semibold">
