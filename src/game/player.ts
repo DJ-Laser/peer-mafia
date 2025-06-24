@@ -11,6 +11,8 @@ export interface PlayerEvents {
   roomNotFound: string;
   roomJoined: void;
   stateChange: SharedPlayerState;
+  connectionLost: void;
+  kickedFromRoom: void;
 }
 
 export class PlayerConnection extends Connection<PlayerEvents> {
@@ -20,6 +22,7 @@ export class PlayerConnection extends Connection<PlayerEvents> {
 
   readonly roomId: string;
   dataConnection: DataConnection | null = null;
+  private kicked = false;
 
   constructor(roomId: string) {
     super(PlayerConnection.generatePeerId());
@@ -68,21 +71,36 @@ export class PlayerConnection extends Connection<PlayerEvents> {
 
     dataConnection.on("error", (error) => {
       console.log("Data channel error: ", error);
+      this.emit("error", error.message);
     });
 
     dataConnection.on("close", () => {
       this.dataConnection = null;
+
+      if (!this.kicked) {
+        this.emit("connectionLost");
+      }
     });
 
     dataConnection.on("data", (data: unknown) => {
       const message = data as Message;
-      console.log("Data channel data: ", data);
 
       switch (message.type) {
-        case "StateUpdate":
-          console.log("New State: ", message.newState);
+        case "StateUpdate": {
           this.emit("stateChange", message.newState);
           break;
+        }
+
+        case "Kicked": {
+          this.emit("kickedFromRoom");
+          this.kicked = true;
+          break;
+        }
+
+        default: {
+          console.log(`Unexpexted message: ${message.type}`);
+          this.emit("error", `Unexpexted message: ${message.type}`);
+        }
       }
     });
   }

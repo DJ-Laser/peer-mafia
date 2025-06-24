@@ -135,7 +135,7 @@ function PlayerInfo({ player, availableRoles, dispatch }: PlayerInfoProps) {
 
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => dispatch({ action: "kick", player })}
+            onClick={() => dispatch({ action: "kickPlayer", player })}
             className="flex items-center space-x-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
           >
             <UserXIcon className="w-4 h-4" />
@@ -266,7 +266,7 @@ function GameStatus({ players, gameStarted, dispatch }: GameStatusProps) {
 type HostAction =
   | { action: "startGame" }
   | { action: "endGame" }
-  | { action: "kick"; player: Player }
+  | { action: "kickPlayer"; player: Player }
   | { action: "changeRole"; player: Player; role: Role };
 
 type HostDispatch = (action: HostAction) => void;
@@ -283,7 +283,6 @@ export default function Component({ loaderData }: Route.ComponentProps) {
 
     connection.on("stateChange", (state: GameState) => {
       setGameState({ ...state });
-      console.log("New state", state);
     });
 
     connection.on("error", (error: string) =>
@@ -301,6 +300,11 @@ export default function Component({ loaderData }: Route.ComponentProps) {
           break;
         }
 
+        case "kickPlayer": {
+          hostConnection.kickPlayer(action.player);
+          break;
+        }
+
         case "startGame": {
           hostConnection.setgameStarted(true);
           break;
@@ -311,10 +315,6 @@ export default function Component({ loaderData }: Route.ComponentProps) {
           break;
         }
       }
-
-      // TODO: Implement actions
-      console.log(action);
-      console.log(hostConnection);
     },
     [hostConnection],
   );

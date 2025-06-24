@@ -181,12 +181,28 @@ export default function Component({ loaderData }: Route.ComponentProps) {
       notifier.setNotification({ color: "error", text: error }),
     );
 
-    connection.on("stateChange", (state: SharedPlayerState) => {
-      setGameState(state);
+    connection.on("stateChange", (state: SharedPlayerState) =>
+      setGameState(state),
+    );
+
+    connection.on("connectionLost", () => {
+      notifier.setNotification({
+        color: "error",
+        text: "Lost connection to host, rejoining may be possible",
+      });
+      navigate("/play");
+    });
+
+    connection.on("kickedFromRoom", () => {
+      notifier.setNotification({
+        color: "warning",
+        text: "You were kicked from the room",
+      });
+      navigate("/play");
     });
 
     return connection;
-  }, [loaderData, notifier]);
+  }, [loaderData, navigate, notifier]);
 
   if (playerConnection === null) {
     // Were navigating back anyway

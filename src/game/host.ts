@@ -124,8 +124,6 @@ export class HostConnection extends Connection<HostEvents> {
     let newPlayer: Player;
     let updateExistingPlayer = false;
 
-    console.log(`New connection from: ${metadata.playerUuid}`);
-
     for (const player of this.players) {
       if (player.uuid === metadata.playerUuid) {
         newPlayer = player;
@@ -152,6 +150,7 @@ export class HostConnection extends Connection<HostEvents> {
 
     connection.on("close", () => {
       newPlayer.connected = false;
+      this.emitStateEvent();
     });
 
     connection.on("data", (message) => {
@@ -195,5 +194,13 @@ export class HostConnection extends Connection<HostEvents> {
   setgameStarted(gameStarted: boolean) {
     this.state.gameStarted = gameStarted;
     this.updateAllPlayers();
+  }
+
+  kickPlayer(player: Player) {
+    this.sendToPlayer(player, { type: "Kicked" });
+    player.connected = false;
+    this.emitStateEvent();
+
+    setTimeout(() => player.connection.close(), 500);
   }
 }
