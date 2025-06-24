@@ -84,11 +84,18 @@ export class HostConnection extends Connection<HostEvents> {
     };
 
     this.sendToPlayer(player, { type: "StateUpdate", newState: playerState });
-    this.emitStateEvent();
   }
 
   private emitStateEvent() {
     this.emit("stateChange", this.state);
+  }
+
+  private updateAllPlayers() {
+    for (const player of this.players) {
+      this.sendPlayerState(player);
+    }
+
+    this.emitStateEvent();
   }
 
   private onPlayerData(player: Player, message: Message) {
@@ -96,6 +103,7 @@ export class HostConnection extends Connection<HostEvents> {
       case "NameChange": {
         player.name = message.name;
         this.sendPlayerState(player);
+        this.emitStateEvent();
 
         break;
       }
@@ -155,6 +163,7 @@ export class HostConnection extends Connection<HostEvents> {
     }
 
     this.sendPlayerState(newPlayer);
+    this.emitStateEvent();
   }
 
   protected handleError(): boolean {
@@ -180,5 +189,11 @@ export class HostConnection extends Connection<HostEvents> {
     player.role = role;
 
     this.sendPlayerState(player);
+    this.emitStateEvent();
+  }
+
+  setgameStarted(gameStarted: boolean) {
+    this.state.gameStarted = gameStarted;
+    this.updateAllPlayers();
   }
 }

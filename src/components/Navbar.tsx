@@ -43,7 +43,7 @@ export function Navbar() {
               <UserIcon className="w-4 h-4" />
               <span>Player</span>
             </PageLink>
-            <PageLink to="/host" activeClassName="bg-orange-600">
+            <PageLink to="/host" activeClassName="bg-orange-500">
               <RouterIcon className="w-4 h-4" />
               <span>Host</span>
             </PageLink>
