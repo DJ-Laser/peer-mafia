@@ -144,6 +144,79 @@ function PlayerInfo({ player, availableRoles, dispatch }: PlayerInfoProps) {
   );
 }
 
+interface PlayerListProps {
+  players: Player[];
+  availableRoles: Role[];
+  dispatch: HostDispatch;
+}
+
+function PlayerList({ players, availableRoles, dispatch }: PlayerListProps) {
+  const playersList = players
+    .filter((player) => player.connected && player.name !== null)
+    .map((player) => (
+      <PlayerInfo
+        key={player.uuid}
+        player={player}
+        availableRoles={availableRoles}
+        dispatch={dispatch}
+      />
+    ));
+
+  return (
+    <Card className="space-y-4">
+      <h1 className="text-3xl font-semibold">Players</h1>
+      {playersList}
+    </Card>
+  );
+}
+
+interface RoleInfoProps {
+  role: Role;
+  amount: number;
+}
+
+function RoleInfo({ role, amount }: RoleInfoProps) {
+  const team = role.team;
+
+  return (
+    <Card secondary className={`p-4 ${team.bgClass} ${team.borderClass}`}>
+      <h3 className="font-semibold">{role.name}</h3>
+      <p className={twMerge("text-2xl font-bold", team.textClass)}>{amount}</p>
+    </Card>
+  );
+}
+
+interface RolesListProps {
+  players: Player[];
+  availableRoles: Role[];
+}
+
+function RolesList({ players, availableRoles }: RolesListProps) {
+  const roleAmounts: Map<Role, number> = new Map();
+
+  for (const role of availableRoles) {
+    roleAmounts.set(role, 0);
+  }
+
+  for (const player of players) {
+    const value = roleAmounts.get(player.role) ?? 0;
+    roleAmounts.set(player.role, value + 1);
+  }
+
+  const rolesList = [];
+
+  for (const [role, amount] of roleAmounts.entries()) {
+    rolesList.push(<RoleInfo key={role.name} role={role} amount={amount} />);
+  }
+
+  return (
+    <Card className="space-y-4">
+      <h1 className="text-3xl font-semibold">Roles</h1>
+      <ul className="grid grid-cols-2 md:grid-cols-4 gap-4">{rolesList}</ul>
+    </Card>
+  );
+}
+
 type HostAction =
   | { action: "kick"; player: Player }
   | { action: "changeRole"; player: Player; role: Role };
@@ -188,24 +261,18 @@ export default function Component({ loaderData }: Route.ComponentProps) {
     [hostConnection],
   );
 
-  const playersList = gameState.players
-    .filter((player) => player.connected && player.name !== null)
-    .map((player) => (
-      <PlayerInfo
-        key={player.uuid}
-        player={player}
-        availableRoles={gameState.availableRoles}
-        dispatch={dispatch}
-      />
-    ));
-
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       <Header roomCode={hostConnection.roomId} />
-      <Card className="space-y-4">
-        <h1 className="text-3xl font-semibold">Players</h1>
-        <ul>{playersList}</ul>
-      </Card>
+      <RolesList
+        players={gameState.players}
+        availableRoles={gameState.availableRoles}
+      />
+      <PlayerList
+        players={gameState.players}
+        availableRoles={gameState.availableRoles}
+        dispatch={dispatch}
+      />
     </div>
   );
 }
