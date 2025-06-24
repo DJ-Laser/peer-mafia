@@ -1,4 +1,4 @@
-import { Eye as EyeIcon, EyeOff as EyeOffIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card } from "../../components/generic/Card";

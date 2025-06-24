@@ -1,4 +1,4 @@
-import { Router as RouterIcon, User as UserIcon } from "lucide-react";
+import { RouterIcon, UserIcon } from "lucide-react";
 import { PropsWithChildren } from "react";
 import { NavLink } from "react-router";
 
