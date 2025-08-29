@@ -109,6 +109,12 @@ export class HostConnection extends Connection<HostEvents> {
         break;
       }
 
+      case "LeaveRoom": {
+        this.removePlayer(player);
+
+        break;
+      }
+
       default: {
         console.log(`Unexpexted message: ${message.type}`);
         this.emit("error", `Unexpexted message: ${message.type}`);
@@ -199,7 +205,7 @@ export class HostConnection extends Connection<HostEvents> {
     this.emitStateEvent();
   }
 
-  setgameStarted(gameStarted: boolean) {
+  setGameStarted(gameStarted: boolean) {
     this.state.gameStarted = gameStarted;
     for (const player of this.players) {
       player.alive = true;
@@ -208,12 +214,16 @@ export class HostConnection extends Connection<HostEvents> {
     this.updateAllPlayers();
   }
 
-  kickPlayer(player: Player, reason?: string) {
-    this.sendToPlayer(player, { type: "Kicked", reason: reason ?? null });
+  private removePlayer(player: Player) {
     player.connected = false;
     this.players.splice(this.players.indexOf(player), 1);
     this.emitStateEvent();
 
     setTimeout(() => player.connection.close(), 500);
+  }
+
+  kickPlayer(player: Player, reason?: string) {
+    this.sendToPlayer(player, { type: "Kicked", reason: reason ?? null });
+    this.removePlayer(player);
   }
 }

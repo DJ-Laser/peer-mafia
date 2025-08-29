@@ -4,7 +4,7 @@ import { cardClasses } from "./cardClasses";
 export interface DialogProps {
   className?: string;
   centered?: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   ref: RefObject<HTMLDialogElement | null>;
 }
 

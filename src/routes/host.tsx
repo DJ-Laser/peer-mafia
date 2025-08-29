@@ -12,7 +12,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useHref } from "react-router";
 import { twMerge } from "tailwind-merge";
 import { Card } from "../components/generic/Card";
-import { Dialog } from "../components/generic/Modal";
+import { Dialog } from "../components/generic/Dialog";
 import { GameState, HostConnection, Player } from "../game/host";
 import { Role } from "../game/role";
 import { useCopy } from "../hooks/useCopy";
@@ -521,12 +521,12 @@ export default function Component({ loaderData }: Route.ComponentProps) {
         }
 
         case "startGame": {
-          hostConnection.setgameStarted(true);
+          hostConnection.setGameStarted(true);
           break;
         }
 
         case "endGame": {
-          hostConnection.setgameStarted(false);
+          hostConnection.setGameStarted(false);
           break;
         }
       }

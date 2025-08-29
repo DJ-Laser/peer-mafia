@@ -3,7 +3,8 @@ import { Role } from "./role";
 export type Message =
   | { type: "Kicked"; reason: string | null }
   | { type: "StateUpdate"; newState: SharedPlayerState }
-  | { type: "NameChange"; name: string };
+  | { type: "NameChange"; name: string }
+  | { type: "LeaveRoom" };
 
 export interface PlayerConnectionMetadata {
   playerUuid: string;

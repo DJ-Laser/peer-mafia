@@ -1,7 +1,8 @@
 import { EyeIcon, EyeOffIcon } from "lucide-react";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card } from "../../components/generic/Card";
+import { Dialog } from "../../components/generic/Dialog";
 import { PlayerConnection } from "../../game/player";
 import { Role } from "../../game/role";
 import { SharedPlayerState } from "../../game/sharedData";
@@ -155,6 +156,49 @@ function RoleCard({ role }: RoleCardProps) {
   );
 }
 
+interface LeaveRoomButtonProps {
+  roomCode: string;
+  onLeave: () => void;
+}
+
+function LeaveRoomButton({ roomCode, onLeave }: LeaveRoomButtonProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  return (
+    <>
+      <Dialog
+        className="min-w-1/3 top-1/8 text-center space-y-6"
+        ref={dialogRef}
+      >
+        <h3 className="text-3xl font-bold text-white">
+          Leave Room {roomCode}?
+        </h3>
+
+        <div className="flex justify-end gap-4">
+          <button
+            className="px-4 py-2 rounded-md hover:scale-105 disabled:scale-none bg-slate-50 text-l font-semibold border border-transparent cursor-pointer transition-all duration-200"
+            onClick={() => dialogRef.current?.close()}
+          >
+            Cancel
+          </button>
+          <button
+            className="px-4 py-2 rounded-md hover:scale-105 disabled:scale-none bg-red-600 text-l font-semibold text-white border border-transparent cursor-pointer transition-all duration-200"
+            onClick={onLeave}
+          >
+            Leave Room
+          </button>
+        </div>
+      </Dialog>
+      <button
+        onClick={() => dialogRef.current?.showModal()}
+        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+      >
+        <span>Leave Room</span>
+      </button>
+    </>
+  );
+}
+
 export default function Component({ loaderData }: Route.ComponentProps) {
   const notifier = useNotifier();
   const navigate = useNavigate();
@@ -231,9 +275,20 @@ export default function Component({ loaderData }: Route.ComponentProps) {
 
   return (
     <Card className="max-w-3xl mx-auto space-y-8">
-      <h1 className="mb-8 text-3xl text-center font-bold">
-        Room {loaderData.roomCode}
-      </h1>
+      <div className="grid gird-cols-1 h-min">
+        <h1 className="row-1 col-1 text-3xl text-center font-bold">
+          Room {loaderData.roomCode}
+        </h1>
+        <div className="row-1 col-1 justify-self-end self-center">
+          <LeaveRoomButton
+            roomCode={loaderData.roomCode}
+            onLeave={() => {
+              playerConnection.leaveRoom();
+              navigate("/play");
+            }}
+          />
+        </div>
+      </div>
       {gameState.gameStarted ? (
         <>
           {gameState.alive ? null : (

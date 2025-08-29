@@ -113,4 +113,12 @@ export class PlayerConnection extends Connection<PlayerEvents> {
       });
     }
   }
+
+  leaveRoom() {
+    if (this.dataConnection !== null) {
+      this.sendMessage(this.dataConnection, {
+        type: "LeaveRoom",
+      });
+    }
+  }
 }
