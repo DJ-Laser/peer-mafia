@@ -211,6 +211,7 @@ export class HostConnection extends Connection<HostEvents> {
   kickPlayer(player: Player) {
     this.sendToPlayer(player, { type: "Kicked" });
     player.connected = false;
+    this.players.splice(this.players.indexOf(player), 1);
     this.emitStateEvent();
 
     setTimeout(() => player.connection.close(), 500);

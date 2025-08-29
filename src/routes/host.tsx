@@ -386,6 +386,10 @@ export default function Component({ loaderData }: Route.ComponentProps) {
     loaderData.initialState,
   );
 
+  const validPlayers = gameState.players.filter(
+    (player) => player.name !== null,
+  );
+
   const hostConnection = useMemo(() => {
     const connection = loaderData.connection;
 
@@ -436,16 +440,16 @@ export default function Component({ loaderData }: Route.ComponentProps) {
     <div className="max-w-6xl mx-auto space-y-8">
       <Header roomCode={hostConnection.roomId} />
       <GameStatus
-        players={gameState.players}
+        players={validPlayers}
         gameStarted={gameState.gameStarted}
         dispatch={dispatch}
       />
       <RolesList
-        players={gameState.players}
+        players={validPlayers}
         availableRoles={gameState.availableRoles}
       />
       <PlayerList
-        players={gameState.players}
+        players={validPlayers}
         availableRoles={gameState.availableRoles}
         gameStarted={gameState.gameStarted}
         dispatch={dispatch}
