@@ -12,6 +12,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useHref } from "react-router";
 import { twMerge } from "tailwind-merge";
 import { Card } from "../components/generic/Card";
+import { Dialog } from "../components/generic/Modal";
 import { GameState, HostConnection, Player } from "../game/host";
 import { Role } from "../game/role";
 import { useCopy } from "../hooks/useCopy";
@@ -195,40 +196,38 @@ function KickPlayerButton({ player, onKick }: KickPlayerButtonProps) {
 
   return (
     <>
-      <dialog
-        className="fixed min-w-1/3 min-h-3/4 top-1/2 left-1/2 -translate-1/2 bg-transparent"
+      <Dialog
+        className="min-w-1/3 top-1/8 text-center space-y-6"
         ref={dialogRef}
         onClose={() => setKickReason("")}
       >
-        <Card className="text-center space-y-6">
-          <h3 className="text-3xl font-bold text-white">Kick {player.name}</h3>
-          <input
-            className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent transition-all duration-200"
-            placeholder="Reason for kicking..."
-            value={kickReason}
-            onKeyDown={(e) => {
-              if (e.key == "Enter") {
-                onKick(kickReason);
-              }
-            }}
-            onChange={(e) => setKickReason(e.target.value)}
-          />
-          <div className="flex justify-end gap-4">
-            <button
-              className="px-4 py-2 rounded-md hover:scale-105 disabled:scale-none bg-slate-50 text-l font-semibold border border-transparent cursor-pointer transition-all duration-200"
-              onClick={() => dialogRef.current?.close()}
-            >
-              Cancel
-            </button>
-            <button
-              className="px-4 py-2 rounded-md hover:scale-105 disabled:scale-none bg-red-600 text-l font-semibold text-white border border-transparent cursor-pointer transition-all duration-200"
-              onClick={() => onKick(kickReason)}
-            >
-              Kick
-            </button>
-          </div>
-        </Card>
-      </dialog>
+        <h3 className="text-3xl font-bold text-white">Kick {player.name}</h3>
+        <input
+          className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent transition-all duration-200"
+          placeholder="Reason for kicking..."
+          value={kickReason}
+          onKeyDown={(e) => {
+            if (e.key == "Enter") {
+              onKick(kickReason);
+            }
+          }}
+          onChange={(e) => setKickReason(e.target.value)}
+        />
+        <div className="flex justify-end gap-4">
+          <button
+            className="px-4 py-2 rounded-md hover:scale-105 disabled:scale-none bg-slate-50 text-l font-semibold border border-transparent cursor-pointer transition-all duration-200"
+            onClick={() => dialogRef.current?.close()}
+          >
+            Cancel
+          </button>
+          <button
+            className="px-4 py-2 rounded-md hover:scale-105 disabled:scale-none bg-red-600 text-l font-semibold text-white border border-transparent cursor-pointer transition-all duration-200"
+            onClick={() => onKick(kickReason)}
+          >
+            Kick
+          </button>
+        </div>
+      </Dialog>
       <div className="flex items-center space-x-4">
         <button
           onClick={() => dialogRef.current?.showModal()}
