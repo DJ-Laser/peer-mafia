@@ -12,7 +12,7 @@ export interface PlayerEvents {
   roomJoined: void;
   stateChange: SharedPlayerState;
   connectionLost: void;
-  kickedFromRoom: void;
+  kickedFromRoom: string | null;
 }
 
 export class PlayerConnection extends Connection<PlayerEvents> {
@@ -92,7 +92,7 @@ export class PlayerConnection extends Connection<PlayerEvents> {
         }
 
         case "Kicked": {
-          this.emit("kickedFromRoom");
+          this.emit("kickedFromRoom", message.reason);
           this.kicked = true;
           break;
         }

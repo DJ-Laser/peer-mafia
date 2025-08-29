@@ -208,8 +208,8 @@ export class HostConnection extends Connection<HostEvents> {
     this.updateAllPlayers();
   }
 
-  kickPlayer(player: Player) {
-    this.sendToPlayer(player, { type: "Kicked" });
+  kickPlayer(player: Player, reason?: string) {
+    this.sendToPlayer(player, { type: "Kicked", reason: reason ?? null });
     player.connected = false;
     this.players.splice(this.players.indexOf(player), 1);
     this.emitStateEvent();

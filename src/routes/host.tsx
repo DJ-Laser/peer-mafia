@@ -8,7 +8,7 @@ import {
   UsersIcon,
   UserXIcon,
 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useHref } from "react-router";
 import { twMerge } from "tailwind-merge";
 import { Card } from "../components/generic/Card";
@@ -184,6 +184,64 @@ function AliveDeadSelector({ player, dispatch }: AliveDeadSelectorProps) {
   );
 }
 
+interface KickPlayerButtonProps {
+  player: Player;
+  onKick: (reason: string) => void;
+}
+
+function KickPlayerButton({ player, onKick }: KickPlayerButtonProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [kickReason, setKickReason] = useState("");
+
+  return (
+    <>
+      <dialog
+        className="fixed min-w-1/3 min-h-3/4 top-1/2 left-1/2 -translate-1/2 bg-transparent"
+        ref={dialogRef}
+        onClose={() => setKickReason("")}
+      >
+        <Card className="text-center space-y-6">
+          <h3 className="text-3xl font-bold text-white">Kick {player.name}</h3>
+          <input
+            className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent transition-all duration-200"
+            placeholder="Reason for kicking..."
+            value={kickReason}
+            onKeyDown={(e) => {
+              if (e.key == "Enter") {
+                onKick(kickReason);
+              }
+            }}
+            onChange={(e) => setKickReason(e.target.value)}
+          />
+          <div className="flex justify-end gap-4">
+            <button
+              className="px-4 py-2 rounded-md hover:scale-105 disabled:scale-none bg-slate-50 text-l font-semibold border border-transparent cursor-pointer transition-all duration-200"
+              onClick={() => dialogRef.current?.close()}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-4 py-2 rounded-md hover:scale-105 disabled:scale-none bg-red-600 text-l font-semibold text-white border border-transparent cursor-pointer transition-all duration-200"
+              onClick={() => onKick(kickReason)}
+            >
+              Kick
+            </button>
+          </div>
+        </Card>
+      </dialog>
+      <div className="flex items-center space-x-4">
+        <button
+          onClick={() => dialogRef.current?.showModal()}
+          className="flex items-center space-x-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+        >
+          <UserXIcon className="w-4 h-4" />
+          <span>Kick</span>
+        </button>
+      </div>
+    </>
+  );
+}
+
 interface PlayerInfoProps {
   player: Player;
   availableRoles: Role[];
@@ -233,15 +291,16 @@ function PlayerInfo({
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => dispatch({ action: "kickPlayer", player })}
-            className="flex items-center space-x-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
-          >
-            <UserXIcon className="w-4 h-4" />
-            <span>Kick</span>
-          </button>
-        </div>
+        <KickPlayerButton
+          player={player}
+          onKick={(reason) =>
+            dispatch({
+              action: "kickPlayer",
+              player,
+              reason: reason == "" ? undefined : reason,
+            })
+          }
+        />
       </div>
     </Card>
   );
@@ -373,7 +432,7 @@ function GameStatus({ players, gameStarted, dispatch }: GameStatusProps) {
 type HostAction =
   | { action: "startGame" }
   | { action: "endGame" }
-  | { action: "kickPlayer"; player: Player }
+  | { action: "kickPlayer"; player: Player; reason?: string }
   | { action: "changeRole"; player: Player; role: Role }
   | { action: "setLiving"; player: Player; alive: boolean };
 
@@ -418,7 +477,7 @@ export default function Component({ loaderData }: Route.ComponentProps) {
         }
 
         case "kickPlayer": {
-          hostConnection.kickPlayer(action.player);
+          hostConnection.kickPlayer(action.player, action.reason);
           break;
         }
 

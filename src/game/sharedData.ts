@@ -1,7 +1,7 @@
 import { Role } from "./role";
 
 export type Message =
-  | { type: "Kicked" }
+  | { type: "Kicked"; reason: string | null }
   | { type: "StateUpdate"; newState: SharedPlayerState }
   | { type: "NameChange"; name: string };
 
