@@ -118,7 +118,7 @@ interface RoleSelectorProps {
 
 function RoleSelector({ player, availableRoles, dispatch }: RoleSelectorProps) {
   return (
-    <div className="relative">
+    <div className="relative w-min">
       <select
         value={player.role.name}
         onChange={(e) => {
@@ -257,6 +257,8 @@ function PlayerInfo({
   const team = player.role.team;
   const roleColors = `${team.bgClass} ${team.borderClass}`;
 
+  const playerIcon = player.alive ? <UserIcon /> : <GhostIcon />;
+
   return (
     <Card
       secondary
@@ -266,13 +268,18 @@ function PlayerInfo({
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-4">
             <div className="w-10 h-10 bg-slate-800/50 border border-slate-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-semibold">
-                {player.alive ? <UserIcon /> : <GhostIcon />}
-              </span>
+              <span className="text-white font-semibold">{playerIcon}</span>
             </div>
           </div>
           <div>
-            <h3 className="font-semibold text-white">{player.name}</h3>
+            <span className="flex gap-2 items-center">
+              <h3 className="font-semibold text-white">{player.name}</h3>
+              {!player.connected && (
+                <p className="text-sm font-medium text-slate-300">
+                  (Disconnected)
+                </p>
+              )}
+            </span>
             {gameStarted ? (
               <div className="flex space-x-4 items-center">
                 <p className={`font-semibold ${team.textClass}`}>
@@ -318,17 +325,15 @@ function PlayerList({
   gameStarted,
   dispatch,
 }: PlayerListProps) {
-  const playersList = players
-    .filter((player) => player.connected && player.name !== null)
-    .map((player) => (
-      <PlayerInfo
-        key={player.uuid}
-        player={player}
-        availableRoles={availableRoles}
-        gameStarted={gameStarted}
-        dispatch={dispatch}
-      />
-    ));
+  const playersList = players.map((player) => (
+    <PlayerInfo
+      key={player.uuid}
+      player={player}
+      availableRoles={availableRoles}
+      gameStarted={gameStarted}
+      dispatch={dispatch}
+    />
+  ));
 
   return (
     <Card className="space-y-4">
@@ -338,18 +343,35 @@ function PlayerList({
   );
 }
 
-interface RoleInfoProps {
-  role: Role;
-  amount: number;
+interface RoleAmount {
+  total: number;
+  alive: number;
 }
 
-function RoleInfo({ role, amount }: RoleInfoProps) {
+interface RoleInfoProps {
+  role: Role;
+  amount: RoleAmount;
+  showAliveVsDead: boolean;
+}
+
+function RoleInfo({ role, amount, showAliveVsDead }: RoleInfoProps) {
   const team = role.team;
 
+  const showRoleColors = !showAliveVsDead || amount.alive > 0;
+  const bgClasses = showRoleColors
+    ? [team.bgClass, team.borderClass]
+    : undefined;
+
+  const amountText = showAliveVsDead
+    ? `${amount.alive} / ${amount.total}`
+    : `${amount.total}`;
+
   return (
-    <Card secondary className={`p-4 ${team.bgClass} ${team.borderClass}`}>
+    <Card secondary className={twMerge("p-4", bgClasses)}>
       <h3 className="font-semibold">{role.name}</h3>
-      <p className={twMerge("text-2xl font-bold", team.textClass)}>{amount}</p>
+      <p className={twMerge("text-2xl font-bold", team.textClass)}>
+        {amountText}
+      </p>
     </Card>
   );
 }
@@ -357,24 +379,42 @@ function RoleInfo({ role, amount }: RoleInfoProps) {
 interface RolesListProps {
   players: Player[];
   availableRoles: Role[];
+  showAliveVsDead: boolean;
 }
 
-function RolesList({ players, availableRoles }: RolesListProps) {
-  const roleAmounts: Map<Role, number> = new Map();
+function RolesList({
+  players,
+  availableRoles,
+  showAliveVsDead,
+}: RolesListProps) {
+  const roleAmounts: Map<Role, RoleAmount> = new Map();
 
   for (const role of availableRoles) {
-    roleAmounts.set(role, 0);
+    roleAmounts.set(role, {
+      total: 0,
+      alive: 0,
+    });
   }
 
   for (const player of players) {
-    const value = roleAmounts.get(player.role) ?? 0;
-    roleAmounts.set(player.role, value + 1);
+    const amounts = roleAmounts.get(player.role);
+    if (amounts === undefined) continue;
+
+    amounts.total += 1;
+    amounts.alive += player.alive ? 1 : 0;
   }
 
   const rolesList = [];
 
   for (const [role, amount] of roleAmounts.entries()) {
-    rolesList.push(<RoleInfo key={role.name} role={role} amount={amount} />);
+    rolesList.push(
+      <RoleInfo
+        key={role.name}
+        role={role}
+        amount={amount}
+        showAliveVsDead={showAliveVsDead}
+      />,
+    );
   }
 
   return (
@@ -505,6 +545,7 @@ export default function Component({ loaderData }: Route.ComponentProps) {
       <RolesList
         players={validPlayers}
         availableRoles={gameState.availableRoles}
+        showAliveVsDead={gameState.gameStarted}
       />
       <PlayerList
         players={validPlayers}
