@@ -1,5 +1,5 @@
 import { EyeIcon, EyeOffIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card } from "../../components/generic/Card";
 import { PlayerConnection } from "../../game/player";
@@ -67,6 +67,7 @@ interface NameInputScrenProps {
 }
 
 function NameInputScren({ roomCode, onSubmit }: NameInputScrenProps) {
+  const nameInputId = useId();
   const [name, setName] = useState("");
 
   return (
@@ -79,17 +80,22 @@ function NameInputScren({ roomCode, onSubmit }: NameInputScrenProps) {
       <div className="space-y-6">
         <div>
           <label
-            htmlFor="playerName"
+            htmlFor={nameInputId}
             className="block text-sm font-medium text-slate-300 mb-2"
           >
             Enter Your Name
           </label>
           <input
             type="text"
-            id="playerName"
+            id={nameInputId}
             placeholder="Your display name..."
             className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent transition-all duration-200"
             value={name}
+            onKeyDown={(e) => {
+              if (e.key == "Enter") {
+                onSubmit(name);
+              }
+            }}
             onChange={(e) => setName(e.target.value)}
           />
         </div>
@@ -193,10 +199,15 @@ export default function Component({ loaderData }: Route.ComponentProps) {
       navigate("/play");
     });
 
-    connection.on("kickedFromRoom", () => {
+    connection.on("kickedFromRoom", (reason: string | null) => {
+      let text = "You were kicked from the room.";
+      if (reason !== null) {
+        text += ` Reason: ${reason}`;
+      }
+
       notifier.setNotification({
         color: "warning",
-        text: "You were kicked from the room",
+        text,
       });
       navigate("/play");
     });
