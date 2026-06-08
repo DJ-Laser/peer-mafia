@@ -131,7 +131,7 @@ function KickPlayerButton({ player, onKick }: KickPlayerButtonProps) {
           className="flex items-center space-x-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
         >
           <UserXIcon className="w-4 h-4" />
-          <span>Kick</span>
+          <span className="hidden sm:inline">Kick</span>
         </button>
       </div>
     </>

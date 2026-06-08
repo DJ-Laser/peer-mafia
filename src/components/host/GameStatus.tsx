@@ -1,7 +1,7 @@
 import { PlayIcon, SquareIcon, UsersIcon } from "lucide-react";
 import { Player } from "../../game/host";
+import { Card } from "../generic/Card";
 import { HostDispatch } from "../host/hostAction";
-import { Card } from "./Card";
 
 interface GameStatusProps {
   players: Player[];
@@ -15,15 +15,15 @@ export function GameStatus({
   dispatch,
 }: GameStatusProps) {
   return (
-    <Card className="flex justify-between">
-      <div className="flex items-center space-x-3">
+    <Card className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-0">
+      <div className="flex justify-center sm:justify-end items-center space-x-3">
         <UsersIcon className="w-8 h-8 text-orange-400" />
         <div>
           <h3 className="text-lg font-semibold text-white">Players</h3>
           <p className="text-2xl font-bold text-orange-400">{players.length}</p>
         </div>
       </div>
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center justify-center sm:justify-end space-x-4">
         <div className="text-right">
           <p className="text-sm text-slate-400">Game Status</p>
           <p className={`font-semibold text-orange-400"`}>
