@@ -14,7 +14,7 @@ export interface RoleData {
   teamId: TeamId;
 }
 
-export interface RoleCollection<> {
+export interface RoleCollection {
   teams: Record<TeamId, TeamData>;
   roles: Record<RoleId, RoleData>;
   defaultRoles: RoleId[];
