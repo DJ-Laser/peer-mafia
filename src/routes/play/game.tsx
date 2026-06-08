@@ -1,11 +1,10 @@
 import { EyeIcon, EyeOffIcon } from "lucide-react";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card } from "../../components/generic/Card";
 import { Dialog } from "../../components/generic/Dialog";
 import { PlayerConnection } from "../../game/player";
-import { Role } from "../../game/role";
-import { SharedPlayerState } from "../../game/sharedData";
+import { SharedPlayerState, SharedRoleState } from "../../game/sharedData";
 import { useNotifier } from "../../hooks/useNotifier";
 import { Route } from "./+types/game";
 
@@ -113,14 +112,14 @@ function NameInputScren({ roomCode, onSubmit }: NameInputScrenProps) {
 }
 
 interface RoleCardProps {
-  role: Role;
+  roleState: SharedRoleState;
 }
 
-function RoleCard({ role }: RoleCardProps) {
+function RoleCard({ roleState }: RoleCardProps) {
   const [show, setShow] = useState(false);
 
-  const team = role.team;
-  const roleClasses = `${team.bgClass} ${team.textClass} ${team.borderClass}`;
+  const { roleName: roleId, roleDescription, primaryTeam } = roleState;
+  const roleClasses = `${primaryTeam.bgClass} ${primaryTeam} ${primaryTeam.borderClass}`;
 
   return (
     <Card secondary className={show ? roleClasses : ""}>
@@ -142,8 +141,8 @@ function RoleCard({ role }: RoleCardProps) {
       </div>
       {show ? (
         <div className="space-y-3">
-          <h4 className={`text-2xl font-bold`}>{role.name}</h4>
-          <p className="text-slate-300 leading-relaxed">{role.description}</p>
+          <h4 className={`text-2xl font-bold`}>{roleId}</h4>
+          <p className="text-slate-300 leading-relaxed">{roleDescription}</p>
         </div>
       ) : (
         <div className="text-center py-8">
@@ -162,13 +161,14 @@ interface LeaveRoomButtonProps {
 }
 
 function LeaveRoomButton({ roomCode, onLeave }: LeaveRoomButtonProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <>
       <Dialog
         className="min-w-1/3 top-1/8 text-center space-y-6"
-        ref={dialogRef}
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
       >
         <h3 className="text-3xl font-bold text-white">
           Leave Room {roomCode}?
@@ -177,7 +177,7 @@ function LeaveRoomButton({ roomCode, onLeave }: LeaveRoomButtonProps) {
         <div className="flex justify-end gap-4">
           <button
             className="px-4 py-2 rounded-md hover:scale-105 disabled:scale-none bg-slate-50 text-l font-semibold border border-transparent cursor-pointer transition-all duration-200"
-            onClick={() => dialogRef.current?.close()}
+            onClick={() => setDialogOpen(false)}
           >
             Cancel
           </button>
@@ -190,7 +190,7 @@ function LeaveRoomButton({ roomCode, onLeave }: LeaveRoomButtonProps) {
         </div>
       </Dialog>
       <button
-        onClick={() => dialogRef.current?.showModal()}
+        onClick={() => setDialogOpen(true)}
         className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
       >
         <span>Leave Room</span>
@@ -208,7 +208,7 @@ export default function Component({ loaderData }: Route.ComponentProps) {
       ? loaderData.initialState
       : {
           playerName: null,
-          role: null,
+          roleState: null,
           gameStarted: false,
         },
   );
@@ -300,7 +300,7 @@ export default function Component({ loaderData }: Route.ComponentProps) {
               </p>
             </Card>
           )}
-          <RoleCard role={gameState.role} />
+          <RoleCard roleState={gameState.roleState} />
         </>
       ) : (
         <Card secondary className="text-center space-y-3">

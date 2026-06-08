@@ -1,6 +1,13 @@
 import { DataConnection } from "peerjs";
 import { Connection, ID_NUM_CHARS } from "./connection";
-import { exampleRoles, Role } from "./role";
+import {
+  exampleRoleData,
+  RoleCollection,
+  RoleData,
+  RoleId,
+  TeamData,
+  TeamId,
+} from "./roles";
 import {
   Message,
   PlayerConnectionMetadata,
@@ -19,13 +26,72 @@ export interface Player {
   connection: DataConnection;
   connected: boolean;
   alive: boolean;
-  role: Role;
+  roleId: RoleId;
+}
+
+export class RoleState {
+  roleCollection: Readonly<RoleCollection>;
+  roleEnableState: Record<RoleId, boolean>;
+
+  constructor(roleCollection: RoleCollection, enabledRoleIds?: RoleId[]) {
+    if (enabledRoleIds === undefined) {
+      enabledRoleIds = roleCollection.defaultRoles;
+    }
+
+    this.roleCollection = roleCollection;
+    this.roleEnableState = Object.keys(roleCollection.roles).reduce<
+      Record<string, boolean>
+    >((record, roleId) => {
+      record[roleId] = enabledRoleIds.includes(roleId);
+      return record;
+    }, {});
+  }
+
+  isRoleEnabled(roleId: RoleId): boolean {
+    return this.roleEnableState[roleId];
+  }
+
+  getRole(roleId: RoleId): RoleData {
+    return this.roleCollection.roles[roleId];
+  }
+
+  private get enabledRoleIds(): RoleId[] {
+    return Object.entries(this.roleEnableState)
+      .filter(([, enabled]) => enabled)
+      .map(([roleId]) => roleId);
+  }
+
+  get enabledRoles(): Record<string, RoleData> {
+    return this.enabledRoleIds.reduce<Record<string, RoleData>>(
+      (record, roleId) => {
+        record[roleId] = this.getRole(roleId);
+        return record;
+      },
+      {},
+    );
+  }
+
+  get defaultRoleId(): RoleId {
+    return this.enabledRoleIds[0];
+  }
+
+  getTeam(teamId: TeamId): TeamData {
+    return this.roleCollection.teams[teamId];
+  }
+
+  getTeamFor(role: RoleId | RoleData): TeamData {
+    if (typeof role === "string") {
+      role = this.getRole(role);
+    }
+
+    return this.getTeam(role.teamId);
+  }
 }
 
 export interface GameState {
   players: Player[];
   gameStarted: boolean;
-  availableRoles: Role[];
+  roleState: RoleState;
 }
 
 export class HostConnection extends Connection<HostEvents> {
@@ -41,19 +107,15 @@ export class HostConnection extends Connection<HostEvents> {
   state: GameState = {
     players: [],
     gameStarted: false,
-    availableRoles: [
-      exampleRoles.townsperson,
-      exampleRoles.detective,
-      exampleRoles.mafia,
-    ],
+    roleState: new RoleState(exampleRoleData),
   };
 
   private get players() {
     return this.state.players;
   }
 
-  private get availableRoles() {
-    return this.state.availableRoles;
+  private get roleState(): RoleState {
+    return this.state.roleState;
   }
 
   constructor() {
@@ -67,15 +129,20 @@ export class HostConnection extends Connection<HostEvents> {
     let stageDependentState: SharedPreGameState | SharedGameplayState;
 
     if (this.state.gameStarted) {
+      const playerRole = this.roleState.getRole(player.roleId);
       stageDependentState = {
         gameStarted: true,
-        role: player.role,
+        roleState: {
+          roleName: playerRole.name,
+          roleDescription: playerRole.description,
+          primaryTeam: this.roleState.getTeamFor(playerRole),
+        },
         alive: player.alive,
       };
     } else {
       stageDependentState = {
         gameStarted: false,
-        role: null,
+        roleState: null,
       };
     }
 
@@ -145,7 +212,7 @@ export class HostConnection extends Connection<HostEvents> {
       connected: false,
       connection: connection,
       alive: true,
-      role: this.availableRoles[0],
+      roleId: this.roleState.defaultRoleId,
     };
 
     newPlayer.connected = true;
@@ -191,8 +258,8 @@ export class HostConnection extends Connection<HostEvents> {
     return this.sendMessage(player.connection, message);
   }
 
-  setRole(player: Player, role: Role) {
-    player.role = role;
+  setRole(player: Player, roleId: RoleId) {
+    player.roleId = roleId;
 
     this.sendPlayerState(player);
     this.emitStateEvent();
@@ -225,5 +292,10 @@ export class HostConnection extends Connection<HostEvents> {
   kickPlayer(player: Player, reason?: string) {
     this.sendToPlayer(player, { type: "Kicked", reason: reason ?? null });
     this.removePlayer(player);
+  }
+
+  setRoleEnabled(roleId: RoleId, enabled: boolean) {
+    this.roleState.roleEnableState[roleId] = enabled;
+    this.emitStateEvent();
   }
 }

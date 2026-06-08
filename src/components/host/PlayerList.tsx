@@ -1,43 +1,38 @@
 import { ChevronDownIcon, GhostIcon, UserIcon, UserXIcon } from "lucide-react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { Player } from "../../game/host";
-import { Role } from "../../game/role";
+import { useRequiredContext } from "../../util/RequiredContext";
 import { Card } from "../generic/Card";
 import { Dialog } from "../generic/Dialog";
 import { HostDispatch } from "./hostAction";
+import { RoleStateContext } from "./RoleStateContext";
 
 interface RoleSelectorProps {
   player: Player;
-  availableRoles: Role[];
   dispatch: HostDispatch;
 }
 
-function RoleSelector({ player, availableRoles, dispatch }: RoleSelectorProps) {
+function RoleSelector({ player, dispatch }: RoleSelectorProps) {
+  const enabledRoles = useRequiredContext(RoleStateContext).enabledRoles;
+
   return (
     <div className="relative w-min">
       <select
-        value={player.role.name}
+        value={player.roleId}
         onChange={(e) => {
-          const selectedRoleName = e.target.value;
-          const selectedRole = availableRoles.find(
-            (role) => role.name === selectedRoleName,
-          );
-
-          if (selectedRole === undefined) {
-            return;
-          }
+          const selectedRoleId = e.target.value;
 
           dispatch({
             action: "changeRole",
             player,
-            role: selectedRole,
+            roleId: selectedRoleId,
           });
         }}
         className="appearance-none bg-slate-600 border border-slate-500 rounded-lg px-3 py-1 pr-8 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:bg-slate-500"
       >
-        {availableRoles.map((role) => (
-          <option key={role.name} value={role.name} className="bg-slate-600">
+        {Object.entries(enabledRoles).map(([roleId, role]) => (
+          <option key={roleId} value={roleId} className="bg-slate-600">
             {role.name}
           </option>
         ))}
@@ -88,15 +83,18 @@ interface KickPlayerButtonProps {
 }
 
 function KickPlayerButton({ player, onKick }: KickPlayerButtonProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [kickReason, setKickReason] = useState("");
 
   return (
     <>
       <Dialog
         className="min-w-1/3 top-1/8 text-center space-y-6"
-        ref={dialogRef}
-        onClose={() => setKickReason("")}
+        open={dialogOpen}
+        onClose={() => {
+          setKickReason("");
+          setDialogOpen(false);
+        }}
       >
         <h3 className="text-3xl font-bold text-white">Kick {player.name}</h3>
         <input
@@ -113,7 +111,7 @@ function KickPlayerButton({ player, onKick }: KickPlayerButtonProps) {
         <div className="flex justify-end gap-4">
           <button
             className="px-4 py-2 rounded-md hover:scale-105 disabled:scale-none bg-slate-50 text-l font-semibold border border-transparent cursor-pointer transition-all duration-200"
-            onClick={() => dialogRef.current?.close()}
+            onClick={() => setDialogOpen(false)}
           >
             Cancel
           </button>
@@ -127,7 +125,7 @@ function KickPlayerButton({ player, onKick }: KickPlayerButtonProps) {
       </Dialog>
       <div className="flex items-center space-x-4">
         <button
-          onClick={() => dialogRef.current?.showModal()}
+          onClick={() => setDialogOpen(true)}
           className="flex items-center space-x-1 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
         >
           <UserXIcon className="w-4 h-4" />
@@ -140,18 +138,13 @@ function KickPlayerButton({ player, onKick }: KickPlayerButtonProps) {
 
 interface PlayerInfoProps {
   player: Player;
-  availableRoles: Role[];
   gameStarted: boolean;
   dispatch: HostDispatch;
 }
 
-function PlayerInfo({
-  player,
-  availableRoles,
-  gameStarted,
-  dispatch,
-}: PlayerInfoProps) {
-  const team = player.role.team;
+function PlayerInfo({ player, gameStarted, dispatch }: PlayerInfoProps) {
+  const roleState = useRequiredContext(RoleStateContext);
+  const team = roleState.getTeamFor(player.roleId);
   const roleColors = `${team.bgClass} ${team.borderClass}`;
 
   const playerIcon = player.alive ? <UserIcon /> : <GhostIcon />;
@@ -180,16 +173,12 @@ function PlayerInfo({
             {gameStarted ? (
               <div className="flex space-x-4 items-center">
                 <p className={`font-semibold ${team.textClass}`}>
-                  {player.role.name}
+                  {roleState.getRole(player.roleId).name}
                 </p>
                 <AliveDeadSelector player={player} dispatch={dispatch} />
               </div>
             ) : (
-              <RoleSelector
-                player={player}
-                availableRoles={availableRoles}
-                dispatch={dispatch}
-              />
+              <RoleSelector player={player} dispatch={dispatch} />
             )}
           </div>
         </div>
@@ -211,14 +200,12 @@ function PlayerInfo({
 
 interface PlayerListProps {
   players: Player[];
-  availableRoles: Role[];
   gameStarted: boolean;
   dispatch: HostDispatch;
 }
 
 export function PlayerList({
   players,
-  availableRoles,
   gameStarted,
   dispatch,
 }: PlayerListProps) {
@@ -226,7 +213,6 @@ export function PlayerList({
     <PlayerInfo
       key={player.uuid}
       player={player}
-      availableRoles={availableRoles}
       gameStarted={gameStarted}
       dispatch={dispatch}
     />

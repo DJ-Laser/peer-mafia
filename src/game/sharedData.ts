@@ -1,4 +1,4 @@
-import { Role } from "./role";
+import { TeamData } from "./roles";
 
 export type Message =
   | { type: "Kicked"; reason: string | null }
@@ -10,14 +10,20 @@ export interface PlayerConnectionMetadata {
   playerUuid: string;
 }
 
+export interface SharedRoleState {
+  roleName: string;
+  roleDescription: string;
+  primaryTeam: TeamData;
+}
+
 export interface SharedPreGameState {
   gameStarted: false;
-  role: null;
+  roleState: null;
 }
 
 export interface SharedGameplayState {
   gameStarted: true;
-  role: Role;
+  roleState: SharedRoleState;
   alive: boolean;
 }
 

@@ -4,6 +4,7 @@ import { Header } from "../components/host/Header";
 import { HostAction } from "../components/host/hostAction";
 import { PlayerList } from "../components/host/PlayerList";
 import { RolesList } from "../components/host/RolesList";
+import { RoleStateContext } from "../components/host/RoleStateContext";
 import { GameState, HostConnection } from "../game/host";
 import { useNotifier } from "../hooks/useNotifier";
 import { Route } from "./+types/host";
@@ -52,8 +53,13 @@ export default function Component({ loaderData }: Route.ComponentProps) {
   const dispatch = useCallback(
     (action: HostAction) => {
       switch (action.action) {
+        case "setRoleEnabled": {
+          hostConnection.setRoleEnabled(action.roleId, action.enabled);
+          break;
+        }
+
         case "changeRole": {
-          hostConnection.setRole(action.player, action.role);
+          hostConnection.setRole(action.player, action.roleId);
           break;
         }
 
@@ -82,24 +88,25 @@ export default function Component({ loaderData }: Route.ComponentProps) {
   );
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      <Header roomCode={hostConnection.roomId} />
-      <GameStatus
-        players={validPlayers}
-        gameStarted={gameState.gameStarted}
-        dispatch={dispatch}
-      />
-      <RolesList
-        players={validPlayers}
-        availableRoles={gameState.availableRoles}
-        showAliveVsDead={gameState.gameStarted}
-      />
-      <PlayerList
-        players={validPlayers}
-        availableRoles={gameState.availableRoles}
-        gameStarted={gameState.gameStarted}
-        dispatch={dispatch}
-      />
-    </div>
+    <RoleStateContext.Provider value={hostConnection.state.roleState}>
+      <div className="max-w-6xl mx-auto space-y-8">
+        <Header roomCode={hostConnection.roomId} />
+        <GameStatus
+          players={validPlayers}
+          gameStarted={gameState.gameStarted}
+          dispatch={dispatch}
+        />
+        <RolesList
+          dispatch={dispatch}
+          players={validPlayers}
+          showAliveVsDead={gameState.gameStarted}
+        />
+        <PlayerList
+          dispatch={dispatch}
+          players={validPlayers}
+          gameStarted={gameState.gameStarted}
+        />
+      </div>
+    </RoleStateContext.Provider>
   );
 }

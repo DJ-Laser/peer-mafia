@@ -1,11 +1,12 @@
 import { Player } from "../../game/host";
-import { Role } from "../../game/role";
+import { RoleId } from "../../game/roles";
 
 export type HostAction =
   | { action: "startGame" }
   | { action: "endGame" }
+  | { action: "setRoleEnabled"; roleId: RoleId; enabled: boolean }
   | { action: "kickPlayer"; player: Player; reason?: string }
-  | { action: "changeRole"; player: Player; role: Role }
+  | { action: "changeRole"; player: Player; roleId: RoleId }
   | { action: "setLiving"; player: Player; alive: boolean };
 
 export type HostDispatch = (action: HostAction) => void;
