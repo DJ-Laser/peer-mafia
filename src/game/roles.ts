@@ -37,6 +37,14 @@ export const exampleRoleData = {
       bgClass: "bg-blue-500/10",
       borderClass: "border-blue-500/30",
     },
+
+    Cult: {
+      name: "Cult",
+      description: "Cult members",
+      textClass: "text-green-400",
+      bgClass: "bg-green-500/10",
+      borderClass: "border-green-500/30",
+    },
   },
   roles: {
     mafia: {
@@ -56,6 +64,17 @@ export const exampleRoleData = {
       description:
         "Search for clues in the night to uncover the identity of the mafia.",
       teamId: "town",
+    },
+    Bomber: {
+      name: "Bomber",
+      description: "Explode upon death, elimanating nearby players,",
+      teamId: "town",
+    },
+    Cult_Leader: {
+      name: "Cult Leader",
+      description:
+        "Secretly induct players into your cult. If every living player is in your cult, You win.",
+      teamId: "Cult",
     },
   },
   defaultRoles: ["townsperson", "mafia"],
