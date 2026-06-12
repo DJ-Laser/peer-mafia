@@ -77,32 +77,56 @@ export class PlayerConnection extends Connection<PlayerEvents> {
     dataConnection.on("close", () => {
       this.dataConnection = null;
 
-      if (!this.kicked) {
-        this.emit("connectionLost");
+      if (this.kicked) {
+        return;
       }
+
+      this.emit("connectionLost");
     });
 
-    dataConnection.on("data", (data: unknown) => {
-      const message = data as Message;
+    dataConnection.on("data", (data: unknown) => this.handleMessage(data));
+  }
 
-      switch (message.type) {
-        case "StateUpdate": {
-          this.emit("stateChange", message.newState);
-          break;
-        }
+  tryReconnect() {
+    if (this.dataConnection === null) {
+      this.joinRoom();
+    }
+  }
 
-        case "Kicked": {
-          this.emit("kickedFromRoom", message.reason);
-          this.kicked = true;
-          break;
-        }
+  private handleMessage(data: unknown) {
+    if (
+      !(
+        data &&
+        typeof data === "object" &&
+        "type" in data &&
+        typeof data.type == "string"
+      )
+    ) {
+      console.log(`Bad message data: ${data}`);
+      this.emit("error", `Bad message data`);
 
-        default: {
-          console.log(`Unexpexted message: ${message.type}`);
-          this.emit("error", `Unexpexted message: ${message.type}`);
-        }
+      return;
+    }
+
+    const message = data as Message;
+
+    switch (message.type) {
+      case "StateUpdate": {
+        this.emit("stateChange", message.newState);
+        break;
       }
-    });
+
+      case "Kicked": {
+        this.emit("kickedFromRoom", message.reason);
+        this.kicked = true;
+        break;
+      }
+
+      default: {
+        console.log(`Unexpexted message: ${message.type}`);
+        this.emit("error", `Unexpexted message: ${message.type}`);
+      }
+    }
   }
 
   sendNameChange(newName: string) {

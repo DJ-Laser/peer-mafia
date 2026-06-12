@@ -235,12 +235,20 @@ export default function Component({ loaderData }: Route.ComponentProps) {
       setGameState(state),
     );
 
-    connection.on("connectionLost", () => {
+    connection.on("connectionLost", async () => {
+      notifier.setNotification({
+        color: "warning",
+        text: "Lost connection to host, attempting to rejoin.",
+      });
+
+      connection.tryReconnect();
+    });
+
+    connection.on("roomNotFound", async () => {
       notifier.setNotification({
         color: "error",
-        text: "Lost connection to host, rejoining may be possible",
+        text: "Lost connection to host: room no longer exists.",
       });
-      navigate("/play");
     });
 
     connection.on("kickedFromRoom", (reason: string | null) => {
@@ -296,7 +304,7 @@ export default function Component({ loaderData }: Route.ComponentProps) {
               <h1 className="text-xl font-semibold">You have died.</h1>
               <p>
                 As a ghost you may awaken during the night, but you may not talk
-                or give information to the players in any other way.
+                or give information to the players in any way.
               </p>
             </Card>
           )}

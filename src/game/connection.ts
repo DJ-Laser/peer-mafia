@@ -29,7 +29,7 @@ export interface ConnectionEvents {
 
 // Calling the REST API TO fetch the TURN Server Credentials
 // PLEASE don't steal my api key :sob:
-async function getPeerConfig(): Promise<PeerOptions> {
+const peerConfig: Promise<PeerOptions> = (async () => {
   const response = await fetch(
     "https://djlaser-mafia.metered.live/api/v1/turn/credentials?apiKey=b84f9d5703e313de8a71a6a806a96716c3b6",
   );
@@ -40,7 +40,7 @@ async function getPeerConfig(): Promise<PeerOptions> {
   return {
     config: peerRtcConnfig,
   };
-}
+})();
 
 export abstract class Connection<
   Events extends EventEmitter.ValidEventTypes,
@@ -85,7 +85,7 @@ export abstract class Connection<
 
     this._peer = null;
 
-    getPeerConfig().then((options) => {
+    peerConfig.then((options) => {
       this._peer = new Peer(this.peerId, options);
 
       this._peer.on("disconnected", () => {
