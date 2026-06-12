@@ -2,7 +2,7 @@ import { SettingsIcon } from "lucide-react";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { Player } from "../../game/host";
-import { RoleData, RoleId } from "../../game/roles";
+import { RoleData, RoleId } from "../../game/roles/roles";
 import { useRequiredContext } from "../../util/RequiredContext";
 import { Card } from "../generic/Card";
 import { Dialog } from "../generic/Dialog";

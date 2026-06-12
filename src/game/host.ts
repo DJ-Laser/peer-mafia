@@ -1,13 +1,13 @@
 import { DataConnection } from "peerjs";
 import { Connection, ID_NUM_CHARS } from "./connection";
+import { exampleRoleData } from "./roles/exampleRoleData";
 import {
-  exampleRoleData,
   RoleCollection,
   RoleData,
   RoleId,
   TeamData,
   TeamId,
-} from "./roles";
+} from "./roles/roles";
 import {
   Message,
   PlayerConnectionMetadata,

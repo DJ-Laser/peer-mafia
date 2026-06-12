@@ -1,4 +1,4 @@
-import { TeamData } from "./roles";
+import { TeamData } from "./roles/roles";
 
 export type Message =
   | { type: "Kicked"; reason: string | null }
