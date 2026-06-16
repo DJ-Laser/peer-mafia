@@ -40,7 +40,7 @@ jobs:
       - name: Build
         run: npm run build
       - name: Setup 404 redirect
-        run: mv ./build/client/index.html ./build/client/404.html
+        run: cp ./build/client/index.html ./build/client/404.html
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
