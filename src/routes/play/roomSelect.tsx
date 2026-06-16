@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card } from "../../components/generic/Card";
 import { ID_NUM_CHARS } from "../../game/connection";
@@ -6,6 +6,7 @@ import { ID_NUM_CHARS } from "../../game/connection";
 const ROOM_CODE_LENGTH = ID_NUM_CHARS;
 
 export function RoomInput() {
+  const inputId = useId();
   const [code, setCode] = useState("");
   const navigate = useNavigate();
 
@@ -20,15 +21,20 @@ export function RoomInput() {
   }, [canSubmit, code, navigate]);
 
   return (
-    <Card className="mx-auto my-0 max-w-320 w-fit">
+    <Card className="mx-auto my-0 max-w-7xl w-fit">
       <h1 className="text-4xl font-semibold text-center mb-6">Join a Game</h1>
-      <label className="block text-sm font-medium text-slate-300 mb-1">
+      <label
+        className="block text-sm font-medium text-slate-300 mb-1"
+        htmlFor={inputId}
+      >
         Enter your {ROOM_CODE_LENGTH} letter room code
       </label>
-      <span className="flex flex-row flex-nowrap gap-5 justify-center">
+      <div className="flex flex-col sm:flex-row items-center flex-nowrap gap-5 justify-center">
         <input
-          className="px-3 py-2 min-w-32 rounded-md bg-slate-700 text-slate-100 text-xl border border-slate-600 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-400 transition-colors duration-250"
+          className="w-full sm:w-auto px-3 py-2 min-w-32 rounded-md bg-slate-700 text-slate-100 text-xl border border-slate-600 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-400 transition-colors duration-250"
           value={code}
+          id={inputId}
+          name="roomCode"
           maxLength={ROOM_CODE_LENGTH}
           onKeyDown={(e) => {
             if (e.key == "Enter") {
@@ -43,13 +49,13 @@ export function RoomInput() {
           }}
         />
         <button
-          className="px-5 py-2 rounded-md hover:scale-105 disabled:scale-none bg-sky-600 disabled:bg-slate-600 text-l font-semibold border border-transparent  cursor-pointer disabled:cursor-not-allowed transition-all duration-200"
+          className="w-full sm:w-auto px-5 py-2 rounded-md hover:scale-105 disabled:scale-none bg-sky-600 disabled:bg-slate-600 text-l font-semibold border border-transparent  cursor-pointer disabled:cursor-not-allowed transition-all duration-200"
           disabled={!canSubmit}
           onClick={handleSubmit}
         >
           Join Game
         </button>
-      </span>
+      </div>
     </Card>
   );
 }

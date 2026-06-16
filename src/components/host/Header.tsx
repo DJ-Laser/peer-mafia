@@ -53,7 +53,7 @@ export function Header({ roomCode }: HeaderProps) {
       </div>
       <div className="space-y-0.5 shrink overflow-x-hidden">
         <button
-          className="mx-auto sm:mr-0 px-3 py-1 h-11 flex items-center space-x-3 hover:bg-slate-700 rounded-lg transition-colors duration-200"
+          className="mx-auto sm:mr-0 px-3 py-1 h-11 flex items-center gap-3 hover:bg-slate-700 rounded-lg transition-colors duration-200"
           onClick={copyPlayUrl}
         >
           <LinkIcon />
