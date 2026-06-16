@@ -191,7 +191,7 @@ function LeaveRoomButton({ roomCode, onLeave }: LeaveRoomButtonProps) {
       </Dialog>
       <button
         onClick={() => setDialogOpen(true)}
-        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+        className="px-8 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
       >
         <span>Leave Room</span>
       </button>
@@ -282,21 +282,10 @@ export default function Component({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <Card className="max-w-3xl mx-auto space-y-8">
-      <div className="grid gird-cols-1 h-min">
-        <h1 className="row-1 col-1 text-3xl text-center font-bold">
-          Room {loaderData.roomCode}
-        </h1>
-        <div className="row-1 col-1 justify-self-end self-center">
-          <LeaveRoomButton
-            roomCode={loaderData.roomCode}
-            onLeave={() => {
-              playerConnection.leaveRoom();
-              navigate("/play");
-            }}
-          />
-        </div>
-      </div>
+    <Card className="max-w-3xl mx-auto space-y-6">
+      <h1 className="text-3xl text-center font-bold">
+        Room {loaderData.roomCode}
+      </h1>
       {gameState.gameStarted ? (
         <>
           {gameState.alive ? null : (
@@ -318,6 +307,15 @@ export default function Component({ loaderData }: Route.ComponentProps) {
           <p className="text-slate-400">{`You'll receive your role once the game starts`}</p>
         </Card>
       )}
+      <div className="flex justify-center">
+        <LeaveRoomButton
+          roomCode={loaderData.roomCode}
+          onLeave={() => {
+            playerConnection.leaveRoom();
+            navigate("/play");
+          }}
+        />
+      </div>
     </Card>
   );
 }
