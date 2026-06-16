@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@eslint/js": "^9.39.4",
-    "@react-router/node": "^7.6.2",
+    "@react-router/node": "^7.18.0",
     "@tailwindcss/vite": "^4.0.0-beta.6",
     "@vitejs/plugin-react": "^6.0.2",
     "eslint": "^9.39.4",
@@ -26,12 +26,12 @@
     "peerjs": "^1.5.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-router": "^7.6.2",
+    "react-router": "^7.18.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.10"
   },
   "devDependencies": {
-    "@react-router/dev": "^7.6.2",
+    "@react-router/dev": "^7.18.0",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "eslint-config-prettier": "^10.1.5",
