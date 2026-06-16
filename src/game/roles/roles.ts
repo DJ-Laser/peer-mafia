@@ -59,7 +59,8 @@ export interface ActionData {
   maxUses?: number;
 }
 
-export interface RoleCollection {
+export interface RolePack {
+  name: string;
   teams: Record<TeamId, TeamData>;
   roles: Record<RoleId, RoleData>;
   defaultRoles: RoleId[];

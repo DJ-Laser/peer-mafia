@@ -1,6 +1,8 @@
-import { RoleCollection } from "./roles";
+import { RolePack } from "./roles";
 
-export const exampleRoleData = {
+export const mafiaRoleData = {
+  name: "Sam's Mafia Roles",
+
   teams: {
     mafia: {
       name: "Mafia",
@@ -210,4 +212,76 @@ export const exampleRoleData = {
     "detective_investigate",
     "doctor_save",
   ],
-} as const satisfies RoleCollection;
+} as const satisfies RolePack;
+
+export const werewolfRoleData = {
+  name: "Minimal Werewolf Roles",
+
+  teams: {
+    werewolves: {
+      name: "Werevolves",
+      description: "Kill the townspeople in the night.",
+      textClass: "text-red-400",
+      bgClass: "bg-red-500/10",
+      borderClass: "border-red-500/30",
+    },
+
+    town: {
+      name: "Town",
+      description: "Survive and vote out the werewolves.",
+      textClass: "text-blue-400",
+      bgClass: "bg-blue-500/10",
+      borderClass: "border-blue-500/30",
+    },
+  },
+
+  roles: {
+    werewolf: {
+      name: "Werewolf",
+      description: "Kill the townspeople in the night.",
+      teamId: "werewolves",
+    },
+    townsperson: {
+      name: "Townsperson",
+      description:
+        "You are an innocent townsperson. Survive and vote out the werewolves.",
+      teamId: "town",
+    },
+    detective: {
+      name: "Detective",
+      description:
+        "Search for clues in the night to uncover the identity of the werewolves.",
+      teamId: "town",
+    },
+  },
+  defaultRoles: ["town", "werewolf"],
+
+  statuses: {},
+
+  actions: {
+    werewolves_kill: {
+      name: "Kill Townspeople",
+      description: "Choose a person to kill during the night.",
+
+      applicablePlayers: {
+        type: "hasTeam",
+        team: "werewolves",
+      },
+      targetPlayers: { type: "choosePlayers", count: 1 },
+      effects: [{ type: "killPlayers" }],
+    },
+    detective_investigate: {
+      name: "Investigate",
+      description:
+        "Choose a person to investigate. You will learn which team they are on.",
+      applicablePlayers: {
+        type: "hasRole",
+        role: "detective",
+      },
+      targetPlayers: { type: "choosePlayers", count: 1 },
+      effects: [{ type: "revealTeam" }],
+    },
+  },
+
+  nightActions: ["werewolves_kill", "detective_investigate"],
+} as const satisfies RolePack;

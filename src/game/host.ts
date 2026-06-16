@@ -1,13 +1,7 @@
 import { DataConnection } from "peerjs";
 import { Connection, ID_NUM_CHARS } from "./connection";
-import { exampleRoleData } from "./roles/exampleRoleData";
-import {
-  RoleCollection,
-  RoleData,
-  RoleId,
-  TeamData,
-  TeamId,
-} from "./roles/roles";
+import { mafiaRoleData } from "./roles/exampleRoleData";
+import { RoleData, RoleId, RolePack, TeamData, TeamId } from "./roles/roles";
 import {
   Message,
   PlayerConnectionMetadata,
@@ -30,16 +24,16 @@ export interface Player {
 }
 
 export class RoleState {
-  roleCollection: Readonly<RoleCollection>;
+  rolePack: Readonly<RolePack>;
   roleEnableState: Record<RoleId, boolean>;
 
-  constructor(roleCollection: RoleCollection, enabledRoleIds?: RoleId[]) {
+  constructor(rolePack: RolePack, enabledRoleIds?: RoleId[]) {
     if (enabledRoleIds === undefined) {
-      enabledRoleIds = roleCollection.defaultRoles;
+      enabledRoleIds = rolePack.defaultRoles;
     }
 
-    this.roleCollection = roleCollection;
-    this.roleEnableState = Object.keys(roleCollection.roles).reduce<
+    this.rolePack = rolePack;
+    this.roleEnableState = Object.keys(rolePack.roles).reduce<
       Record<string, boolean>
     >((record, roleId) => {
       record[roleId] = enabledRoleIds.includes(roleId);
@@ -52,7 +46,7 @@ export class RoleState {
   }
 
   getRole(roleId: RoleId): RoleData {
-    return this.roleCollection.roles[roleId];
+    return this.rolePack.roles[roleId];
   }
 
   private get enabledRoleIds(): RoleId[] {
@@ -76,7 +70,7 @@ export class RoleState {
   }
 
   getTeam(teamId: TeamId): TeamData {
-    return this.roleCollection.teams[teamId];
+    return this.rolePack.teams[teamId];
   }
 
   getTeamFor(role: RoleId | RoleData): TeamData {
@@ -107,7 +101,7 @@ export class HostConnection extends Connection<HostEvents> {
   state: GameState = {
     players: [],
     gameStarted: false,
-    roleState: new RoleState(exampleRoleData),
+    roleState: new RoleState(mafiaRoleData),
   };
 
   private get players() {
