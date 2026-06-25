@@ -5,7 +5,7 @@ import { HostAction } from "../components/host/hostAction";
 import { PlayerList } from "../components/host/PlayerList";
 import { RolesList } from "../components/host/RolesList";
 import { RoleStateContext } from "../components/host/RoleStateContext";
-import { GameState, HostConnection } from "../game/host";
+import { GameState, HostConnection } from "../game/host/host";
 import { useNotifier } from "../hooks/useNotifier";
 import { Route } from "./+types/host";
 

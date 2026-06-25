@@ -1,5 +1,5 @@
 import { PlayIcon, SquareIcon, UsersIcon } from "lucide-react";
-import { Player } from "../../game/host";
+import { Player } from "../../game/host/host";
 import { Card } from "../generic/Card";
 import { HostDispatch } from "../host/hostAction";
 

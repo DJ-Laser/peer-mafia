@@ -1,4 +1,4 @@
-import { RoleState } from "../../game/host";
+import { RoleState } from "../../game/host/RoleState";
 import {
   RequiredContext,
   createRequiredContext,

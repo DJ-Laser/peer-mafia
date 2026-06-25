@@ -1,5 +1,5 @@
-import { Player } from "../../game/host";
-import { RoleId } from "../../game/roles/roles";
+import { Player } from "../../game/host/host";
+import { RoleId } from "../../game/host/roles/roles";
 
 export type HostAction =
   | { action: "startGame" }

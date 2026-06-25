@@ -1,6 +1,6 @@
 import { DataConnection } from "peerjs";
 import { Connection, OnPeerError } from "./connection";
-import { HostConnection } from "./host";
+import { HostConnection } from "./host/host";
 import {
   Message,
   PlayerConnectionMetadata,

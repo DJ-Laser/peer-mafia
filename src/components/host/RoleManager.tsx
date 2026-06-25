@@ -1,6 +1,6 @@
 import { ArrowUpDownIcon } from "lucide-react";
 import { twMerge } from "tailwind-merge";
-import { RoleData, RoleId, TeamId } from "../../game/roles/roles";
+import { RoleData, RoleId, TeamId } from "../../game/host/roles/roles";
 import { useRequiredContext } from "../../util/RequiredContext";
 import { Accordian } from "../generic/Accordion";
 import { Card } from "../generic/Card";
