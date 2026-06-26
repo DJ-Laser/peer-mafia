@@ -17,7 +17,7 @@ export interface PlayerEvents {
 
 export class PlayerConnection extends Connection<PlayerEvents> {
   static generatePeerId() {
-    return `DJLASER-mafia-player-${Connection.generateId(10)}`;
+    return `DJLASER-mafia-player-${Connection.generateRoomId()}`;
   }
 
   readonly roomId: string;

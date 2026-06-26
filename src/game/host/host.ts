@@ -1,5 +1,5 @@
 import { DataConnection } from "peerjs";
-import { Connection, ID_NUM_CHARS } from "../connection";
+import { Connection } from "../connection";
 import {
   Message,
   PlayerConnectionMetadata,
@@ -9,6 +9,9 @@ import {
 } from "../sharedData";
 import { mafiaRoleData } from "./roles/exampleRoleData";
 import { RoleId } from "./roles/roles";
+import { RoleState } from "./RoleState";
+
+const PREVIOUS_ROOM_ID_KEY = "HOST-LAST-ROOM-ID";
 
 export interface HostEvents {
   stateChange: GameState;
@@ -30,10 +33,6 @@ export interface GameState {
 }
 
 export class HostConnection extends Connection<HostEvents> {
-  static generateRoomId(): string {
-    return Connection.generateId(ID_NUM_CHARS);
-  }
-
   static generatePeerId(roomId: string) {
     return `DJLASER-mafia-room-${roomId}`;
   }
@@ -54,9 +53,16 @@ export class HostConnection extends Connection<HostEvents> {
   }
 
   constructor() {
-    const roomId = HostConnection.generateRoomId();
-    super(HostConnection.generatePeerId(roomId));
+    // Use session storage so if a tab is reopened or reloaded it will preserve the room code
+    // If a whole new tab is opened, a new code will be generated.
+    const lastRoomId = Connection.validateRoomId(
+      sessionStorage.getItem(PREVIOUS_ROOM_ID_KEY),
+    );
 
+    const roomId = lastRoomId ?? Connection.generateRoomId();
+    sessionStorage.setItem(PREVIOUS_ROOM_ID_KEY, roomId);
+
+    super(HostConnection.generatePeerId(roomId));
     this.roomId = roomId;
   }
 

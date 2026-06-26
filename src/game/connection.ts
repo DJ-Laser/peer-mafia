@@ -2,7 +2,7 @@ import EventEmitter from "eventemitter3";
 import Peer, { DataConnection, PeerError, PeerOptions } from "peerjs";
 import { Message } from "./sharedData";
 
-export const ID_ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const ID_ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 export const ID_NUM_CHARS = 5;
 
 const UUID_STORAGE_KEY = "PEER-UNIQUEIDENTIFIER";
@@ -45,15 +45,38 @@ const peerConfig: Promise<PeerOptions> = (async () => {
 export abstract class Connection<
   Events extends EventEmitter.ValidEventTypes,
 > extends EventEmitter<ConnectionEvents | Events> {
-  static generateId(numChars: number): string {
+  static generateNumCharsId(): string {
     let id = "";
 
-    for (let i = 0; i < numChars; i++) {
+    for (let i = 0; i < ID_NUM_CHARS; i++) {
       const charIdx = Math.floor(Math.random() * ID_ALLOWED_CHARS.length);
       id += ID_ALLOWED_CHARS.charAt(charIdx);
     }
 
     return id;
+  }
+
+  static generateRoomId(): string {
+    let id = "";
+
+    for (let i = 0; i < ID_NUM_CHARS; i++) {
+      const charIdx = Math.floor(Math.random() * ID_ALLOWED_CHARS.length);
+      id += ID_ALLOWED_CHARS.charAt(charIdx);
+    }
+
+    return id;
+  }
+
+  static validateRoomId(roomId: unknown): string | null {
+    if (typeof roomId != "string" || roomId.length !== ID_NUM_CHARS) {
+      return null;
+    }
+
+    if ([...roomId].every((char) => ID_ALLOWED_CHARS.includes(char))) {
+      return roomId;
+    }
+
+    return null;
   }
 
   private _peer: Peer | null;
