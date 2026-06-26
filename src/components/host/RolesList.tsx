@@ -53,18 +53,13 @@ function ManageRolesButton({ dispatch }: ManageRolesButtonProps) {
 
   return (
     <>
-      <Dialog
-        open={dialogOpen}
-        onClose={() => {
-          setDialogOpen(false);
-        }}
-        centerY
-        className="w-full sm:w-2/3 h-2/3"
-      >
-        <RoleManager
-          dispatch={dispatch}
-          onClose={() => setDialogOpen(false)}
-        ></RoleManager>
+      <Dialog open={dialogOpen} centerY className="w-full sm:w-2/3 h-2/3">
+        {dialogOpen && (
+          <RoleManager
+            dispatch={dispatch}
+            onClose={() => setDialogOpen(false)}
+          />
+        )}
       </Dialog>
       <button
         onClick={() => setDialogOpen(true)}

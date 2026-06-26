@@ -12,6 +12,7 @@ import { RoleId } from "./roles/roles";
 import { RoleState } from "./RoleState";
 
 const PREVIOUS_ROOM_ID_KEY = "HOST-LAST-ROOM-ID";
+//TODO: use const LAST_USED_ROLE_STATE_KEY = "HOST-LAST-ROLE-STATE";
 
 export interface HostEvents {
   stateChange: GameState;
@@ -38,11 +39,7 @@ export class HostConnection extends Connection<HostEvents> {
   }
 
   readonly roomId: string;
-  state: GameState = {
-    players: [],
-    gameStarted: false,
-    roleState: new RoleState(mafiaRoleData),
-  };
+  state: GameState;
 
   private get players() {
     return this.state.players;
@@ -64,6 +61,12 @@ export class HostConnection extends Connection<HostEvents> {
 
     super(HostConnection.generatePeerId(roomId));
     this.roomId = roomId;
+
+    this.state = {
+      players: [],
+      gameStarted: false,
+      roleState: new RoleState(mafiaRoleData),
+    };
   }
 
   private sendPlayerState(player: Player) {
@@ -103,8 +106,6 @@ export class HostConnection extends Connection<HostEvents> {
     for (const player of this.players) {
       this.sendPlayerState(player);
     }
-
-    this.emitStateEvent();
   }
 
   private onPlayerData(player: Player, message: Message) {
@@ -220,6 +221,7 @@ export class HostConnection extends Connection<HostEvents> {
     }
 
     this.updateAllPlayers();
+    this.emitStateEvent();
   }
 
   private removePlayer(player: Player) {
@@ -235,8 +237,22 @@ export class HostConnection extends Connection<HostEvents> {
     this.removePlayer(player);
   }
 
-  setRoleEnabled(roleId: RoleId, enabled: boolean) {
-    this.roleState.roleEnableState[roleId] = enabled;
+  updateRoleState(newRoleState: RoleState) {
+    if (Object.entries(newRoleState.enabledRoles).length === 0) {
+      const rolePack = newRoleState.rolePack;
+      this.state.roleState = new RoleState(rolePack, rolePack.defaultRoles);
+    } else {
+      this.state.roleState = newRoleState;
+    }
+
+    for (const player of this.players) {
+      if (!(player.roleId in this.roleState.enabledRoles)) {
+        // New role pack doesn't have the player's current role
+        player.roleId = this.roleState.defaultRoleId;
+        this.sendPlayerState(player);
+      }
+    }
+
     this.emitStateEvent();
   }
 }

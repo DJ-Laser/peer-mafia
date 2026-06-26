@@ -10,12 +10,24 @@ export class RoleState {
     }
 
     this.rolePack = rolePack;
-    this.roleEnableState = Object.keys(rolePack.roles).reduce<
-      Record<string, boolean>
-    >((record, roleId) => {
-      record[roleId] = enabledRoleIds.includes(roleId);
-      return record;
-    }, {});
+
+    const rolesByTeamId = Object.groupBy(
+      Object.entries(rolePack.roles),
+      ([, role]) => role.teamId,
+    );
+
+    const teamIds = Object.keys(rolePack.teams);
+    const sortedRoleIds = teamIds.flatMap(
+      (teamId) => rolesByTeamId[teamId]?.map(([roleId]) => roleId) ?? [],
+    );
+
+    this.roleEnableState = sortedRoleIds.reduce<Record<string, boolean>>(
+      (record, roleId) => {
+        record[roleId] = enabledRoleIds.includes(roleId);
+        return record;
+      },
+      {},
+    );
   }
 
   isRoleEnabled(roleId: RoleId): boolean {
@@ -43,6 +55,12 @@ export class RoleState {
   }
 
   get defaultRoleId(): RoleId {
+    for (const roleId of this.rolePack.defaultRoles) {
+      if (this.enabledRoleIds.includes(roleId)) {
+        return roleId;
+      }
+    }
+
     return this.enabledRoleIds[0];
   }
 
@@ -56,5 +74,17 @@ export class RoleState {
     }
 
     return this.getTeam(role.teamId);
+  }
+
+  withRoleEnabled(roleId: RoleId, enabled: boolean): RoleState {
+    const newRoleState: RoleState = Object.create(RoleState.prototype);
+
+    newRoleState.rolePack = this.rolePack;
+    newRoleState.roleEnableState = {
+      ...this.roleEnableState,
+      [roleId]: enabled,
+    };
+
+    return newRoleState;
   }
 }

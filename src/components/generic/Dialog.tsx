@@ -39,7 +39,15 @@ export function Dialog({
         customClassName,
       )}
       ref={dialogRef}
-      onClose={onClose}
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose?.();
+      }}
+      onClose={() => {
+        if (open) {
+          dialogRef.current?.showModal();
+        }
+      }}
     >
       {children}
     </dialog>

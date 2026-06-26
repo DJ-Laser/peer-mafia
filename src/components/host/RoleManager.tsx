@@ -1,6 +1,13 @@
 import { ArrowUpDownIcon } from "lucide-react";
+import { useState } from "react";
 import { twMerge } from "tailwind-merge";
-import { RoleData, RoleId, TeamId } from "../../game/host/roles/roles";
+import {
+  RoleData,
+  RoleId,
+  RolePack,
+  TeamId,
+} from "../../game/host/roles/roles";
+import { RoleState } from "../../game/host/RoleState";
 import { useRequiredContext } from "../../util/RequiredContext";
 import { Accordian } from "../generic/Accordion";
 import { Card } from "../generic/Card";
@@ -8,14 +15,19 @@ import { HostDispatch } from "./hostAction";
 import { RoleStateContext } from "./RoleStateContext";
 
 interface TeamDropdownProps {
+  roleState: RoleState;
   teamId: TeamId;
-  dispatch: HostDispatch;
   roles?: [RoleId, RoleData][];
+  setRoleEnabled: (roleId: RoleId, enabled: boolean) => void;
 }
 
-function TeamDropdown({ teamId, roles, dispatch }: TeamDropdownProps) {
-  const currentRoleState = useRequiredContext(RoleStateContext);
-  const team = currentRoleState.getTeam(teamId);
+function TeamDropdown({
+  roleState,
+  teamId,
+  roles,
+  setRoleEnabled,
+}: TeamDropdownProps) {
+  const team = roleState.getTeam(teamId);
   const bgClasses = [team.bgClass, team.borderClass];
 
   return (
@@ -24,18 +36,12 @@ function TeamDropdown({ teamId, roles, dispatch }: TeamDropdownProps) {
       <hr className="my-4" />
       <div className="flex flex-wrap gap-2">
         {roles?.map(([roleId, role]) => {
-          const enabled = currentRoleState.isRoleEnabled(roleId);
+          const enabled = roleState.isRoleEnabled(roleId);
 
           return (
             <button
               key={roleId}
-              onClick={() => {
-                dispatch({
-                  action: "setRoleEnabled",
-                  roleId,
-                  enabled: !enabled,
-                });
-              }}
+              onClick={() => setRoleEnabled(roleId, !enabled)}
             >
               <Card
                 secondary
@@ -60,11 +66,17 @@ export interface RoleManagerProps {
 }
 
 export function RoleManager({ dispatch, onClose }: RoleManagerProps) {
-  const currentRoleState = useRequiredContext(RoleStateContext);
-  const currentRolePack = currentRoleState.rolePack;
+  const gameRoleState = useRequiredContext(RoleStateContext);
+  const [editingRoleState, setEditingRoleState] = useState(gameRoleState);
+
+  const setRoleEnabled = (roleId: RoleId, enabled: boolean) =>
+    setEditingRoleState(editingRoleState.withRoleEnabled(roleId, enabled));
+
+  const setRolePack = (rolePack: RolePack) =>
+    setEditingRoleState(new RoleState(rolePack));
 
   const rolesByTeamId = Object.groupBy(
-    Object.entries(currentRolePack.roles),
+    Object.entries(editingRoleState.rolePack.roles),
     ([, role]) => role.teamId,
   );
 
@@ -77,9 +89,10 @@ export function RoleManager({ dispatch, onClose }: RoleManagerProps) {
       {Object.entries(rolesByTeamId).map(([teamId, roles]) => (
         <TeamDropdown
           key={teamId}
+          roleState={editingRoleState}
           teamId={teamId}
           roles={roles}
-          dispatch={dispatch}
+          setRoleEnabled={setRoleEnabled}
         />
       ))}
 
@@ -96,6 +109,10 @@ export function RoleManager({ dispatch, onClose }: RoleManagerProps) {
           <button
             className="px-4 py-2 rounded-md hover:scale-105 bg-slate-50 font-semibold cursor-pointer transition-transform duration-200"
             onClick={() => {
+              dispatch({
+                action: "updateRoleState",
+                roleState: editingRoleState,
+              });
               onClose?.();
             }}
           >

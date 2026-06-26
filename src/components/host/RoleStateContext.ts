@@ -4,5 +4,5 @@ import {
   createRequiredContext,
 } from "../../util/RequiredContext";
 
-export const RoleStateContext: RequiredContext<Readonly<RoleState>> =
+export const RoleStateContext: RequiredContext<RoleState> =
   createRequiredContext();

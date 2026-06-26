@@ -53,11 +53,6 @@ export default function Component({ loaderData }: Route.ComponentProps) {
   const dispatch = useCallback(
     (action: HostAction) => {
       switch (action.action) {
-        case "setRoleEnabled": {
-          hostConnection.setRoleEnabled(action.roleId, action.enabled);
-          break;
-        }
-
         case "changeRole": {
           hostConnection.setRole(action.player, action.roleId);
           break;
@@ -80,6 +75,11 @@ export default function Component({ loaderData }: Route.ComponentProps) {
 
         case "endGame": {
           hostConnection.setGameStarted(false);
+          break;
+        }
+
+        case "updateRoleState": {
+          hostConnection.updateRoleState(action.roleState);
           break;
         }
       }
